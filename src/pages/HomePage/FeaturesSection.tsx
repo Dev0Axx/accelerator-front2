@@ -1,18 +1,5 @@
 import React from 'react'
-import {
-	Card,
-	CardContent,
-	Typography,
-	Button,
-	Box,
-	Stack,
-} from '@mui/material'
-import {
-	AddCircleOutline,
-	ListAlt,
-	Analytics,
-	Settings,
-} from '@mui/icons-material'
+import { Box, Typography, Button } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 
 const FeaturesSection: React.FC = () => {
@@ -20,91 +7,219 @@ const FeaturesSection: React.FC = () => {
 
 	const features = [
 		{
-			icon: <AddCircleOutline sx={{ fontSize: 40 }} />,
-			title: 'Ввод улова',
+			number: '01',
+			title: 'Учёт уловов',
 			description:
-				'Быстрое добавление информации о пойманной рыбе с проверкой квот',
+				'Простой и быстрый ввод данных о пойманной рыбе с автоматической проверкой квот',
 			path: '/catch',
-			color: '#1976d2',
 		},
 		{
-			icon: <ListAlt sx={{ fontSize: 40 }} />,
-			title: 'Мои уловы',
-			description: 'Просмотр истории всех ваших уловов с фильтрацией и поиском',
-			path: '/my-catches',
-			color: '#2e7d32',
-		},
-		{
-			icon: <Analytics sx={{ fontSize: 40 }} />,
-			title: 'Обзор уловов',
-			description: 'Аналитика и статистика по всем уловам в системе',
-			path: '/overview',
-			color: '#ed6c02',
-		},
-		{
-			icon: <Settings sx={{ fontSize: 40 }} />,
-			title: 'Управление квотами',
-			description: 'Настройка лимитов и контроль выполнения квот',
+			number: '02',
+			title: 'Контроль квот',
+			description:
+				'Мониторинг использования квот в реальном времени с уведомлениями о приближении лимитов',
 			path: '/quotas',
-			color: '#9c27b0',
+		},
+		{
+			number: '03',
+			title: 'Аналитика и отчёты',
+			description:
+				'Детальные отчёты и визуализация данных для принятия взвешенных решений по управлению рыболовной деятельностью',
+			path: '/analytics',
 		},
 	]
 
 	return (
-		<Box>
+		<Box sx={{ textAlign: 'center' }}>
 			<Typography
-				variant='h4'
+				variant='h3'
 				component='h2'
-				gutterBottom
-				sx={{ textAlign: 'center', mb: 4 }}
+				sx={{
+					fontWeight: 700,
+					mb: 2,
+					fontSize: { xs: '2rem', md: '2.5rem' },
+				}}
 			>
-				Основные возможности
+				Ключевые возможности
 			</Typography>
 
-			<Stack direction='row' flexWrap='wrap' rowGap={4} gap={2}>
-				{features.map((feature, index) => (
-					<Card
+			<Typography
+				variant='h6'
+				component='p'
+				sx={{
+					color: 'text.secondary',
+					mb: 6,
+					maxWidth: '600px',
+					margin: '0 auto',
+					fontSize: { xs: '1rem', md: '1.1rem' },
+				}}
+			>
+				Все необходимые инструменты для эффективного управления рыболовной
+				деятельностью
+			</Typography>
+
+			{/* Первая строка - 2 пункта */}
+			<Box
+				mt={4}
+				sx={{
+					display: 'flex',
+					gap: 4,
+					mb: 4,
+					flexDirection: { xs: 'column', md: 'row' },
+				}}
+			>
+				{features.slice(0, 2).map((feature, index) => (
+					<Box
 						key={index}
 						sx={{
-							minHeight: '100%',
-							cursor: 'pointer',
-							transition: 'all 0.3s ease',
-							flex: 'calc(50% - 16px)',
+							flex: 1,
+							display: 'flex',
+							alignItems: 'flex-start',
+							gap: 3,
+							textAlign: 'left',
+							p: 4,
+							borderRadius: 2,
+							transition: 'all 0.3s ease-in-out',
 							'&:hover': {
+								bgcolor: 'action.hover',
 								transform: 'translateY(-4px)',
-								boxShadow: 6,
+								boxShadow: 3,
 							},
+							cursor: 'pointer',
+							border: '1px solid',
+							borderColor: 'divider',
 						}}
 						onClick={() => navigate(feature.path)}
 					>
-						<CardContent sx={{ p: 3 }}>
-							<Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
-								<Box sx={{ color: feature.color, mr: 2 }}>{feature.icon}</Box>
-								<Box>
-									<Typography
-										variant='h6'
-										component='h3'
-										gutterBottom
-										sx={{ fontWeight: 'bold' }}
-									>
-										{feature.title}
-									</Typography>
-									<Typography variant='body2' color='text.secondary'>
-										{feature.description}
-									</Typography>
-								</Box>
-							</Box>
-							<Button
-								variant='text'
-								size='small'
-								sx={{ mt: 1, color: feature.color }}
+						<Typography
+							variant='h3'
+							component='div'
+							sx={{
+								fontSize: { xs: '2.5rem', md: '3rem' },
+								fontWeight: 700,
+								color: 'primary.main',
+								lineHeight: 1,
+								minWidth: '70px',
+							}}
+						>
+							{feature.number}
+						</Typography>
+						<Box sx={{ flex: 1 }}>
+							<Typography
+								variant='h5'
+								component='h3'
+								sx={{
+									fontWeight: 600,
+									mb: 2,
+									fontSize: { xs: '1.3rem', md: '1.5rem' },
+								}}
 							>
-								Перейти →
-							</Button>
-						</CardContent>
-					</Card>
+								{feature.title}
+							</Typography>
+							<Typography
+								variant='body1'
+								color='text.secondary'
+								sx={{ lineHeight: 1.6, mb: 2 }}
+							>
+								{feature.description}
+							</Typography>
+							{/* <Button
+								variant='text'
+								sx={{
+									color: 'primary.main',
+									fontWeight: 600,
+									p: 0,
+									'&:hover': {
+										backgroundColor: 'transparent',
+										textDecoration: 'underline',
+									},
+								}}
+							>
+								Подробнее →
+							</Button> */}
+						</Box>
+					</Box>
 				))}
-			</Stack>
+			</Box>
+
+			{/* Вторая строка - 1 пункт по центру */}
+			<Box
+				sx={{
+					display: 'flex',
+					justifyContent: 'center',
+				}}
+			>
+				<Box
+					sx={{
+						maxWidth: '600px',
+						width: '100%',
+						display: 'flex',
+						alignItems: 'flex-start',
+						gap: 3,
+						textAlign: 'left',
+						p: 4,
+						borderRadius: 2,
+						transition: 'all 0.3s ease-in-out',
+						'&:hover': {
+							bgcolor: 'action.hover',
+							transform: 'translateY(-4px)',
+							boxShadow: 3,
+						},
+						cursor: 'pointer',
+						border: '1px solid',
+						borderColor: 'divider',
+					}}
+					onClick={() => navigate(features[2].path)}
+				>
+					<Typography
+						variant='h3'
+						component='div'
+						sx={{
+							fontSize: { xs: '2.5rem', md: '3rem' },
+							fontWeight: 700,
+							color: 'primary.main',
+							lineHeight: 1,
+							minWidth: '70px',
+						}}
+					>
+						{features[2].number}
+					</Typography>
+					<Box sx={{ flex: 1 }}>
+						<Typography
+							variant='h5'
+							component='h3'
+							sx={{
+								fontWeight: 600,
+								mb: 2,
+								fontSize: { xs: '1.3rem', md: '1.5rem' },
+							}}
+						>
+							{features[2].title}
+						</Typography>
+						<Typography
+							variant='body1'
+							color='text.secondary'
+							sx={{ lineHeight: 1.6, mb: 2 }}
+						>
+							{features[2].description}
+						</Typography>
+						<Button
+							variant='text'
+							sx={{
+								color: 'primary.main',
+								fontWeight: 600,
+								p: 0,
+								'&:hover': {
+									backgroundColor: 'transparent',
+									textDecoration: 'underline',
+								},
+							}}
+						>
+							Подробнее →
+						</Button>
+					</Box>
+				</Box>
+			</Box>
 		</Box>
 	)
 }

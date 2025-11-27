@@ -1,0 +1,136 @@
+// CompanyQuotas.tsx
+import React from 'react'
+import {
+	Paper,
+	Typography,
+	Box,
+	LinearProgress,
+	Chip,
+	Stack,
+	Card,
+	CardContent,
+} from '@mui/material'
+import { Business, TrendingUp } from '@mui/icons-material'
+
+interface Quota {
+	id: string
+	species: string
+	totalQuota: number
+	usedQuota: number
+	region: string
+}
+
+interface CompanyQuotasProps {
+	quotas: Quota[]
+}
+
+const CompanyQuotas: React.FC<CompanyQuotasProps> = ({ quotas }) => {
+	const getQuotaPercentage = (used: number, total: number) =>
+		(used / total) * 100
+	const getRemainingQuota = (used: number, total: number) => total - used
+
+	const getProgressColor = (percentage: number) => {
+		if (percentage >= 90) return 'error'
+		if (percentage >= 75) return 'warning'
+		return 'primary'
+	}
+
+	return (
+		<Paper
+			//  sx={{ p: 3 }}
+			elevation={0}
+		>
+			<Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+				<Business color='primary' />
+				<Typography variant='h6' sx={{ fontWeight: 'bold' }}>
+					Квоты компании
+				</Typography>
+			</Box>
+
+			<Stack spacing={2}>
+				{quotas.map(quota => {
+					const percentage = getQuotaPercentage(
+						quota.usedQuota,
+						quota.totalQuota
+					)
+					const remaining = getRemainingQuota(quota.usedQuota, quota.totalQuota)
+
+					return (
+						<Card key={quota.id} elevation={3}>
+							<CardContent>
+								<Box
+									sx={{
+										display: 'flex',
+										justifyContent: 'space-between',
+										alignItems: 'flex-start',
+										mb: 2,
+									}}
+								>
+									<Box>
+										<Typography variant='h6' gutterBottom>
+											{quota.species}
+										</Typography>
+										<Typography variant='body2' color='text.secondary'>
+											{quota.region}
+										</Typography>
+									</Box>
+									<Chip
+										label={`Осталось: ${remaining.toLocaleString()} кг`}
+										color={
+											remaining < quota.totalQuota * 0.1 ? 'error' : 'primary'
+										}
+										variant='outlined'
+									/>
+								</Box>
+
+								<Box sx={{ mb: 1 }}>
+									<Box
+										sx={{
+											display: 'flex',
+											justifyContent: 'space-between',
+											mb: 1,
+										}}
+									>
+										<Typography variant='body2' color='text.secondary'>
+											Использовано: {quota.usedQuota.toLocaleString()} кг
+										</Typography>
+										<Typography variant='body2' color='text.secondary'>
+											Всего: {quota.totalQuota.toLocaleString()} кг
+										</Typography>
+									</Box>
+									<LinearProgress
+										variant='determinate'
+										value={Math.min(percentage, 100)}
+										color={getProgressColor(percentage)}
+										sx={{ height: 8, borderRadius: 4 }}
+									/>
+								</Box>
+
+								<Typography
+									variant='body2'
+									color='text.secondary'
+									sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+								>
+									<TrendingUp fontSize='small' />
+									{percentage.toFixed(1)}% квоты использовано
+								</Typography>
+							</CardContent>
+						</Card>
+					)
+				})}
+			</Stack>
+
+			{quotas.length === 0 && (
+				<Typography
+					variant='body2'
+					color='text.secondary'
+					sx={{ textAlign: 'center', py: 3 }}
+				>
+					Нет доступных квот
+				</Typography>
+			)}
+		</Paper>
+	)
+}
+
+export default CompanyQuotas

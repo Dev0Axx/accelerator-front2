@@ -27,7 +27,7 @@ const OverviewPage: React.FC = () => {
 					<OverviewFilters />
 
 					{/* Статистические карточки */}
-					<StatisticsCards />
+					{/* <StatisticsCards /> */}
 
 					{/* Прогресс квот */}
 					<QuotasProgress />

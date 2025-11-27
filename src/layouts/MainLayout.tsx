@@ -29,6 +29,7 @@ const MainLayout: React.FC<Props> = ({ children }) => {
 		{ label: 'Мои уловы', path: '/my-catches' },
 		{ label: 'Обзор уловов', path: '/overview' },
 		{ label: 'Квоты', path: '/quotas' },
+		{ label: 'Сообщения', path: '/adminMessages' },
 	]
 
 	return (

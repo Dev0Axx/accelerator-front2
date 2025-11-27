@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react'
 import {
 	Modal,
@@ -7,33 +8,45 @@ import {
 	Button,
 	Typography,
 	IconButton,
+	Autocomplete,
 } from '@mui/material'
 import { Close, Save } from '@mui/icons-material'
 
-interface SetQuotaModalProps {
+interface SetCompanyQuotaModalProps {
 	open: boolean
 	onClose: () => void
 	title?: string
 }
 
-interface QuotaFormData {
+interface CompanyQuotaFormData {
+	company: string
 	species: string
 	region: string
 	year: number
 	limit: string
 }
 
-const SetQuotaModal: React.FC<SetQuotaModalProps> = ({
+const SetCompanyQuotaModal: React.FC<SetCompanyQuotaModalProps> = ({
 	open,
 	onClose,
-	title,
+	title = 'Установить квоту компании',
 }) => {
-	const [formData, setFormData] = useState<QuotaFormData>({
+	const [formData, setFormData] = useState<CompanyQuotaFormData>({
+		company: '',
 		species: '',
 		region: '',
 		year: new Date().getFullYear(),
 		limit: '',
 	})
+
+	// Mock данные
+	const companies = [
+		{ id: '1', name: 'ООО "Рыбпром"', inn: '1234567890' },
+		{ id: '2', name: 'АО "Морские ресурсы"', inn: '0987654321' },
+		{ id: '3', name: 'ИП Сидоров А.В.', inn: '1122334455' },
+		{ id: '4', name: 'ООО "Черноморрыба"', inn: '5566778899' },
+		{ id: '5', name: 'АО "Северный рыбак"', inn: '6677889900' },
+	]
 
 	const species = [
 		{ id: '1', name: 'Хамса' },
@@ -59,17 +72,22 @@ const SetQuotaModal: React.FC<SetQuotaModalProps> = ({
 	]
 
 	const handleInputChange =
-		(field: keyof QuotaFormData) =>
+		(field: keyof CompanyQuotaFormData) =>
 		(event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
 			setFormData(prev => ({ ...prev, [field]: event.target.value }))
 		}
 
+	const handleCompanyChange = (_event: any, value: any) => {
+		setFormData(prev => ({ ...prev, company: value?.id || '' }))
+	}
+
 	const handleSubmit = (event: React.FormEvent) => {
 		event.preventDefault()
-		console.log('Установить квоту:', formData)
+		console.log('Установить квоту компании:', formData)
 		// Здесь будет API запрос
 		onClose()
 		setFormData({
+			company: '',
 			species: '',
 			region: '',
 			year: new Date().getFullYear(),
@@ -80,6 +98,7 @@ const SetQuotaModal: React.FC<SetQuotaModalProps> = ({
 	const handleClose = () => {
 		onClose()
 		setFormData({
+			company: '',
 			species: '',
 			region: '',
 			year: new Date().getFullYear(),
@@ -88,10 +107,13 @@ const SetQuotaModal: React.FC<SetQuotaModalProps> = ({
 	}
 
 	const isFormValid =
+		formData.company &&
 		formData.species &&
 		formData.region &&
 		formData.limit &&
 		parseFloat(formData.limit) > 0
+
+	const selectedCompany = companies.find(c => c.id === formData.company)
 
 	return (
 		<Modal open={open} onClose={handleClose}>
@@ -118,7 +140,7 @@ const SetQuotaModal: React.FC<SetQuotaModalProps> = ({
 					}}
 				>
 					<Typography variant='h5' sx={{ fontWeight: 'bold' }}>
-						{title || 'Установить новую квоту'}
+						{title}
 					</Typography>
 					<IconButton onClick={handleClose} size='small'>
 						<Close />
@@ -128,6 +150,21 @@ const SetQuotaModal: React.FC<SetQuotaModalProps> = ({
 				{/* Форма */}
 				<Box component='form' onSubmit={handleSubmit}>
 					<Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+						<Autocomplete
+							options={companies}
+							getOptionLabel={option => `${option.name} (ИНН: ${option.inn})`}
+							value={selectedCompany || null}
+							onChange={handleCompanyChange}
+							renderInput={params => (
+								<TextField
+									{...params}
+									label='Компания'
+									required
+									placeholder='Выберите компанию'
+								/>
+							)}
+						/>
+
 						<TextField
 							select
 							label='Вид рыбы'
@@ -185,7 +222,7 @@ const SetQuotaModal: React.FC<SetQuotaModalProps> = ({
 									required
 									fullWidth
 									inputProps={{ min: '1', step: '1' }}
-									helperText='Введите лимит в килограммах'
+									helperText='Лимит для компании'
 								/>
 							</Box>
 						</Box>
@@ -213,4 +250,4 @@ const SetQuotaModal: React.FC<SetQuotaModalProps> = ({
 	)
 }
 
-export default SetQuotaModal
+export default SetCompanyQuotaModal

@@ -19,6 +19,7 @@ import {
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
+import { api } from '../../api/api'
 
 const LoginPage: React.FC = () => {
 	const navigate = useNavigate()
@@ -58,7 +59,10 @@ const LoginPage: React.FC = () => {
 
 		try {
 			// Имитация запроса к API
-			await new Promise(resolve => setTimeout(resolve, 1500))
+			const response = await api.post('/auth/login', {
+				username: formData.username,
+				password: formData.password,
+			})
 
 			const account = demoAccounts.find(
 				acc =>

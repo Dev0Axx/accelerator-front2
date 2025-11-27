@@ -1,73 +1,101 @@
 import React from 'react'
-import { Paper, Typography, Button, Stack, Container } from '@mui/material'
+import { Box, Typography, Button, Container } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
-import PhishingIcon from '@mui/icons-material/Phishing'
 
 const HeroSection: React.FC = () => {
 	const navigate = useNavigate()
 
 	return (
-		<Paper
+		<Box
 			sx={{
-				backgroundColor: 'primary.main',
-				color: 'white',
-				py: 8,
-				borderRadius: 2,
+				// minHeight: '80vh',
+				display: 'flex',
+				alignItems: 'center',
+				justifyContent: 'center',
 				textAlign: 'center',
+				// py: 8,
 			}}
 		>
-			<Container maxWidth='md'>
-				<Stack
-					direction='row'
-					alignItems='center'
-					justifyContent='center'
-					gap={2}
-					mb={1}
+			<Container>
+				{/* Заголовок */}
+				<Typography
+					variant='h1'
+					component='h1'
+					sx={{
+						fontSize: { xs: '2.5rem', md: '3.5rem', lg: '4rem' },
+						fontWeight: 700,
+						lineHeight: 1.1,
+						mb: 3,
+						background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+						backgroundClip: 'text',
+						WebkitBackgroundClip: 'text',
+						color: 'transparent',
+					}}
 				>
-					<PhishingIcon sx={{ fontSize: '90px' }} />
-					<Typography variant='h2' component='h1' sx={{ fontWeight: 'bold' }}>
-						Система учёта улова
-					</Typography>
-				</Stack>
-				<Typography variant='h5' component='p' sx={{ mb: 4, opacity: 0.9 }}>
-					Современная платформа для контроля и управления рыболовными квотами
+					Цифровая платформа
+					<br />
+					для учёта рыболовных квот
 				</Typography>
-				<Stack
-					direction={{ xs: 'column', sm: 'row' }}
-					spacing={2}
-					justifyContent='center'
+
+				{/* Подзаголовок */}
+				<Typography
+					variant='h5'
+					component='p'
+					sx={{
+						fontSize: { xs: '1.1rem', md: '1.3rem' },
+						fontWeight: 400,
+						color: 'text.secondary',
+						mb: 4,
+						maxWidth: '600px',
+						margin: '0 auto',
+						lineHeight: 1.6,
+					}}
+				>
+					Автоматизируйте контроль вылова, отслеживайте квоты в реальном времени
+					и упростите отчётность для вашей рыболовной компании
+				</Typography>
+
+				{/* Кнопки */}
+				<Box
+					mt={4}
+					sx={{
+						display: 'flex',
+						gap: 2,
+						justifyContent: 'center',
+						flexWrap: 'wrap',
+					}}
 				>
 					<Button
 						variant='contained'
 						size='large'
-						onClick={() => navigate('/catch')}
+						onClick={() => navigate('/register')}
 						sx={{
-							bgcolor: 'white',
-							color: 'primary.main',
-							'&:hover': { bgcolor: 'grey.100' },
 							px: 4,
 							py: 1.5,
+							fontSize: '1.1rem',
+							fontWeight: 600,
+							borderRadius: 2,
 						}}
 					>
-						Добавить улов
+						Начать работу
 					</Button>
-					<Button
+					{/* <Button
 						variant='outlined'
 						size='large'
-						onClick={() => navigate('/overview')}
+						onClick={() => navigate('/about')}
 						sx={{
-							borderColor: 'white',
-							color: 'white',
-							'&:hover': { bgcolor: 'rgba(255,255,255,0.1)' },
 							px: 4,
 							py: 1.5,
+							fontSize: '1.1rem',
+							fontWeight: 600,
+							borderRadius: 2,
 						}}
 					>
-						Смотреть статистику
-					</Button>
-				</Stack>
+						Узнать больше
+					</Button> */}
+				</Box>
 			</Container>
-		</Paper>
+		</Box>
 	)
 }
 

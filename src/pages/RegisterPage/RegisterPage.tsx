@@ -1,9 +1,8 @@
-import React, { useState } from 'react'
+import React from 'react'
 import {
 	Container,
 	Paper,
 	Box,
-	TextField,
 	Button,
 	Typography,
 	Alert,
@@ -12,67 +11,37 @@ import {
 	Stepper,
 	Step,
 	StepLabel,
-	MenuItem,
+	Stack,
 } from '@mui/material'
-import {
-	PersonAdd,
-	Visibility,
-	VisibilityOff,
-	Person,
-	Lock,
-	Email,
-	Badge,
-	ArrowBack,
-} from '@mui/icons-material'
+import { ArrowBack } from '@mui/icons-material'
 import { useNavigate, Link } from 'react-router-dom'
+import CompanyInfoStep from './steps/CompanyInfoStep'
+import AddressStep from './steps/AddressStep'
+import CredentialsStep from './steps/CredentialsStep'
+import { useRegisterForm } from '../../hooks/useRegisterForm'
+import DomainAddIcon from '@mui/icons-material/DomainAdd'
 
 const RegisterPage: React.FC = () => {
 	const navigate = useNavigate()
-	const [activeStep, setActiveStep] = useState(0)
-	const [formData, setFormData] = useState({
-		// Шаг 1: Основная информация
-		username: '',
-		email: '',
-		password: '',
-		confirmPassword: '',
-		// Шаг 2: Профиль
-		fullName: '',
-		phone: '',
-		experience: '',
-		vessel: '',
-	})
-	const [showPassword, setShowPassword] = useState(false)
-	const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-	const [isLoading, setIsLoading] = useState(false)
-	const [error, setError] = useState('')
+	const {
+		activeStep,
+		formData,
+		isLoading,
+		error,
+		handleInputChange,
+		handleCheckboxChange,
+		handleMultiSelectChange,
+		validateStep,
+		setActiveStep,
+		setIsLoading,
+		setError,
+	} = useRegisterForm()
 
-	const steps = ['Основная информация', 'Профиль рыбака']
-
-	const handleInputChange =
-		(field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
-			setFormData(prev => ({ ...prev, [field]: event.target.value }))
-			if (error) setError('')
-		}
+	const steps = ['Информация о компании', 'Адрес и контакты', 'Учетные данные']
 
 	const handleNext = () => {
-		if (activeStep === 0) {
-			// Валидация первого шага
-			if (
-				!formData.username.trim() ||
-				!formData.email.trim() ||
-				!formData.password
-			) {
-				setError('Заполните все обязательные поля')
-				return
-			}
-			if (formData.password.length < 6) {
-				setError('Пароль должен содержать минимум 6 символов')
-				return
-			}
-			if (formData.password !== formData.confirmPassword) {
-				setError('Пароли не совпадают')
-				return
-			}
+		if (!validateStep(activeStep)) {
+			return
 		}
 		setActiveStep(prev => prev + 1)
 		setError('')
@@ -85,27 +54,31 @@ const RegisterPage: React.FC = () => {
 
 	const handleSubmit = async (event: React.FormEvent) => {
 		event.preventDefault()
+
+		if (!validateStep(activeStep)) {
+			return
+		}
+
 		setIsLoading(true)
 		setError('')
 
 		try {
-			// Имитация запроса к API
 			await new Promise(resolve => setTimeout(resolve, 2000))
+			console.log('Регистрация компании:', formData)
 
-			// В реальном приложении здесь будет отправка данных на сервер
-			console.log('Регистрация:', formData)
-
-			// Сохраняем пользователя (в реальном приложении - токен)
-			const userData = {
-				username: formData.username,
+			const companyData = {
+				companyName: formData.companyName,
+				inn: formData.inn,
 				email: formData.email,
-				role: 'Рыбак', // Новые пользователи всегда рыбаки
+				username: formData.username,
+				role: 'company_admin',
 				fullName: formData.fullName,
-				experience: formData.experience,
+				position: formData.position,
 			}
 
-			localStorage.setItem('user', JSON.stringify(userData))
-			navigate('/')
+			localStorage.setItem('company', JSON.stringify(companyData))
+			localStorage.setItem('user', JSON.stringify(companyData))
+			navigate('/company/dashboard')
 		} catch {
 			setError('Ошибка при регистрации. Попробуйте позже.')
 		} finally {
@@ -117,136 +90,27 @@ const RegisterPage: React.FC = () => {
 		switch (step) {
 			case 0:
 				return (
-					<Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-						<TextField
-							label='Имя пользователя *'
-							value={formData.username}
-							onChange={handleInputChange('username')}
-							required
-							fullWidth
-							InputProps={{
-								startAdornment: (
-									<Person sx={{ color: 'text.secondary', mr: 1 }} />
-								),
-							}}
-							placeholder='Придумайте имя пользователя'
-							helperText='От 3 до 20 символов'
-						/>
-
-						<TextField
-							label='Email *'
-							type='email'
-							value={formData.email}
-							onChange={handleInputChange('email')}
-							required
-							fullWidth
-							InputProps={{
-								startAdornment: (
-									<Email sx={{ color: 'text.secondary', mr: 1 }} />
-								),
-							}}
-							placeholder='example@mail.com'
-						/>
-
-						<TextField
-							label='Пароль *'
-							type={showPassword ? 'text' : 'password'}
-							value={formData.password}
-							onChange={handleInputChange('password')}
-							required
-							fullWidth
-							InputProps={{
-								startAdornment: (
-									<Lock sx={{ color: 'text.secondary', mr: 1 }} />
-								),
-								endAdornment: (
-									<Button
-										size='small'
-										onClick={() => setShowPassword(!showPassword)}
-										sx={{ minWidth: 'auto', p: 0.5 }}
-									>
-										{showPassword ? <VisibilityOff /> : <Visibility />}
-									</Button>
-								),
-							}}
-							helperText='Минимум 6 символов'
-						/>
-
-						<TextField
-							label='Подтверждение пароля *'
-							type={showConfirmPassword ? 'text' : 'password'}
-							value={formData.confirmPassword}
-							onChange={handleInputChange('confirmPassword')}
-							required
-							fullWidth
-							InputProps={{
-								startAdornment: (
-									<Lock sx={{ color: 'text.secondary', mr: 1 }} />
-								),
-								endAdornment: (
-									<Button
-										size='small'
-										onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-										sx={{ minWidth: 'auto', p: 0.5 }}
-									>
-										{showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-									</Button>
-								),
-							}}
-						/>
-					</Box>
+					<CompanyInfoStep
+						formData={formData}
+						onInputChange={handleInputChange}
+					/>
 				)
-
 			case 1:
 				return (
-					<Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-						<TextField
-							label='ФИО'
-							value={formData.fullName}
-							onChange={handleInputChange('fullName')}
-							fullWidth
-							InputProps={{
-								startAdornment: (
-									<Badge sx={{ color: 'text.secondary', mr: 1 }} />
-								),
-							}}
-							placeholder='Иванов Иван Иванович'
-						/>
-
-						<TextField
-							label='Телефон'
-							value={formData.phone}
-							onChange={handleInputChange('phone')}
-							fullWidth
-							placeholder='+7 (999) 999-99-99'
-						/>
-
-						<TextField
-							select
-							label='Опыт работы'
-							value={formData.experience}
-							onChange={handleInputChange('experience')}
-							fullWidth
-						>
-							<MenuItem value=''>Не указано</MenuItem>
-							<MenuItem value='less1'>Менее 1 года</MenuItem>
-							<MenuItem value='1-3'>1-3 года</MenuItem>
-							<MenuItem value='3-5'>3-5 лет</MenuItem>
-							<MenuItem value='5-10'>5-10 лет</MenuItem>
-							<MenuItem value='10plus'>Более 10 лет</MenuItem>
-						</TextField>
-
-						<TextField
-							label='Название судна'
-							value={formData.vessel}
-							onChange={handleInputChange('vessel')}
-							fullWidth
-							placeholder="Например, 'Волна-1'"
-							helperText='Необязательное поле'
-						/>
-					</Box>
+					<AddressStep
+						formData={formData}
+						onInputChange={handleInputChange}
+						onMultiSelectChange={handleMultiSelectChange}
+					/>
 				)
-
+			case 2:
+				return (
+					<CredentialsStep
+						formData={formData}
+						onInputChange={handleInputChange}
+						onCheckboxChange={handleCheckboxChange}
+					/>
+				)
 			default:
 				return 'Неизвестный шаг'
 		}
@@ -254,7 +118,7 @@ const RegisterPage: React.FC = () => {
 
 	return (
 		<Container
-			maxWidth='md'
+			maxWidth='lg'
 			sx={{
 				minHeight: '100vh',
 				display: 'flex',
@@ -271,28 +135,35 @@ const RegisterPage: React.FC = () => {
 					borderRadius: 3,
 				}}
 			>
-				{/* Заголовок */}
 				<Box sx={{ textAlign: 'center', mb: 4 }}>
-					<Typography
-						variant='h3'
-						component='h1'
-						gutterBottom
-						sx={{
-							fontWeight: 'bold',
-							background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
-							backgroundClip: 'text',
-							WebkitBackgroundClip: 'text',
-							color: 'transparent',
-						}}
+					<Stack
+						direction='row'
+						alignItems='center'
+						gap={3}
+						justifyContent='center'
 					>
-						🎣 Регистрация
-					</Typography>
+						<DomainAddIcon sx={{ fontSize: '60px' }} color='primary' />
+						<Typography
+							variant='h3'
+							component='h1'
+							gutterBottom
+							sx={{
+								m: 0,
+								fontWeight: 'bold',
+								background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+								backgroundClip: 'text',
+								WebkitBackgroundClip: 'text',
+								color: 'transparent',
+							}}
+						>
+							Регистрация компании
+						</Typography>
+					</Stack>
 					<Typography variant='body1' color='text.secondary'>
-						Создайте аккаунт для доступа к системе
+						Создайте аккаунт для вашей рыболовной компании
 					</Typography>
 				</Box>
 
-				{/* Степпер */}
 				<Stepper activeStep={activeStep} sx={{ mb: 4 }}>
 					{steps.map(label => (
 						<Step key={label}>
@@ -307,14 +178,12 @@ const RegisterPage: React.FC = () => {
 					</Alert>
 				)}
 
-				{/* Форма */}
 				<Box
 					component='form'
 					onSubmit={activeStep === steps.length - 1 ? handleSubmit : undefined}
 				>
 					{getStepContent(activeStep)}
 
-					{/* Кнопки навигации */}
 					<Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
 						<Button
 							onClick={handleBack}
@@ -329,12 +198,13 @@ const RegisterPage: React.FC = () => {
 								type='submit'
 								variant='contained'
 								disabled={isLoading}
-								startIcon={
-									isLoading ? <CircularProgress size={20} /> : <PersonAdd />
-								}
 								size='large'
 							>
-								{isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
+								{isLoading ? (
+									<CircularProgress size={24} />
+								) : (
+									'Зарегистрировать компанию'
+								)}
 							</Button>
 						) : (
 							<Button variant='contained' onClick={handleNext} size='large'>
@@ -350,18 +220,16 @@ const RegisterPage: React.FC = () => {
 					</Typography>
 				</Divider>
 
-				{/* Ссылка на вход */}
 				<Box sx={{ textAlign: 'center' }}>
 					<Button component={Link} to='/login' variant='outlined' fullWidth>
 						Войти в существующий аккаунт
 					</Button>
 				</Box>
 
-				{/* Информация */}
 				<Box sx={{ mt: 3, textAlign: 'center' }}>
 					<Typography variant='caption' color='text.secondary'>
-						После регистрации вы получите роль "Рыбак". Для получения прав
-						администратора обратитесь к системному администратору.
+						После регистрации вы получите роль "Администратор компании". Для
+						подтверждения регистрации может потребоваться проверка документов.
 					</Typography>
 				</Box>
 			</Paper>

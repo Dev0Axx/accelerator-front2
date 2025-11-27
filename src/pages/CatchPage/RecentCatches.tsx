@@ -43,7 +43,7 @@ const recentCatches = [
 
 const RecentCatches: React.FC = () => {
 	return (
-		<Paper sx={{ p: 3 }}>
+		<Paper sx={{ p: 3 }} elevation={3}>
 			<Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
 				<History color='primary' />
 				<Typography variant='h6' sx={{ fontWeight: 'bold' }}>

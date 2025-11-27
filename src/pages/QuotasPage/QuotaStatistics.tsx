@@ -12,6 +12,12 @@ const QuotaStatistics: React.FC = () => {
 		totalLimit: 45200,
 		totalUsed: 32850,
 		utilization: 73,
+
+		totalCompanyQuotas: 8,
+		activeCompanyQuotas: 8,
+		criticalCompanyQuotas: 2,
+		warningCompanyQuotas: 2,
+		normalCompanyQuotas: 4,
 	}
 
 	return (

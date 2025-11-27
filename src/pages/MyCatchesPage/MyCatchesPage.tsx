@@ -1,8 +1,8 @@
 import React from 'react'
 import { Typography, Box, Button } from '@mui/material'
-import { Add, Download } from '@mui/icons-material'
+import { Add } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
-import MyCatchesFilters from './MyCatchesFilters'
+// import MyCatchesFilters from './MyCatchesFilters'
 import MyCatchesTable from './MyCatchesTable'
 import CatchSummary from './CatchSummary'
 
@@ -27,16 +27,16 @@ const MyCatchesPage: React.FC = () => {
 						gutterBottom
 						sx={{ fontWeight: 'bold' }}
 					>
-						🎣 Мои уловы
+						Мои уловы
 					</Typography>
 					<Typography variant='body1' color='text.secondary'>
 						История всех ваших уловов и текущая статистика
 					</Typography>
 				</Box>
 				<Box sx={{ display: 'flex', gap: 2 }}>
-					<Button variant='outlined' startIcon={<Download />}>
+					{/* <Button variant='outlined' startIcon={<Download />}>
 						Экспорт
-					</Button>
+					</Button> */}
 					<Button
 						variant='contained'
 						startIcon={<Add />}
@@ -52,7 +52,7 @@ const MyCatchesPage: React.FC = () => {
 				<CatchSummary />
 
 				{/* Фильтры */}
-				<MyCatchesFilters />
+				{/* <MyCatchesFilters /> */}
 
 				{/* Таблица уловов */}
 				<MyCatchesTable />
