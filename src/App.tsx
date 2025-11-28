@@ -11,8 +11,12 @@ import LoginPage from './pages/LoginPage/LoginPage'
 import RegisterPage from './pages/RegisterPage/RegisterPage'
 import ContactPage from './pages/ContactPage/ContactPage'
 import AdminMessagesPage from './pages/AdminMessagesPage/AdminMessagesPage'
+import AccessDenied from './shared/components/AccessDenied'
+import { useLocalStorage } from './hooks/useLocalStorage'
 
 function App() {
+	const token = useLocalStorage('token')
+
 	return (
 		<ThemeProvider>
 			<CssBaseline />
@@ -20,14 +24,37 @@ function App() {
 				<MainLayout>
 					<Routes>
 						<Route path='/' element={<HomePage />} />
-						<Route path='/catch' element={<CatchPage />} />
-						<Route path='/my-catches' element={<MyCatchesPage />} />
-						<Route path='/overview' element={<OverviewPage />} />
-						<Route path='/quotas' element={<QuotasPage />} />
-						<Route path='/login' element={<LoginPage />} />
-						<Route path='/register' element={<RegisterPage />} />
+
+						<Route path='/login' element={!token && <LoginPage />} />
+
+						<Route path='/register' element={!token && <RegisterPage />} />
+
 						<Route path='/contact' element={<ContactPage />} />
-						<Route path='/adminMessages' element={<AdminMessagesPage />} />
+
+						<Route
+							path='/catch'
+							element={token ? <CatchPage /> : <AccessDenied />}
+						/>
+
+						<Route
+							path='/my-catches'
+							element={token ? <MyCatchesPage /> : <AccessDenied />}
+						/>
+
+						<Route
+							path='/overview'
+							element={token ? <OverviewPage /> : <AccessDenied />}
+						/>
+
+						<Route
+							path='/quotas'
+							element={token ? <QuotasPage /> : <AccessDenied />}
+						/>
+
+						<Route
+							path='/adminMessages'
+							element={token ? <AdminMessagesPage /> : <AccessDenied />}
+						/>
 					</Routes>
 				</MainLayout>
 			</Router>

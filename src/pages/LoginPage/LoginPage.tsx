@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState } from 'react'
 import {
 	Container,
@@ -20,9 +22,16 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
 import { api } from '../../api/api'
+import { useSnackbar } from 'notistack'
+import { type IUserData } from '../../interfaces'
+import { setData } from '../../store/slices/userProfileSlice '
+import { useDispatch } from 'react-redux'
 
 const LoginPage: React.FC = () => {
 	const navigate = useNavigate()
+	const { enqueueSnackbar } = useSnackbar()
+	const dispatch = useDispatch()
+
 	const [formData, setFormData] = useState({
 		username: '',
 		password: '',
@@ -30,21 +39,6 @@ const LoginPage: React.FC = () => {
 	const [showPassword, setShowPassword] = useState(false)
 	const [isLoading, setIsLoading] = useState(false)
 	const [error, setError] = useState('')
-
-	const demoAccounts = [
-		{
-			username: 'fisherman',
-			password: 'fisherman',
-			role: 'Рыбак',
-			description: 'Ввод уловов и просмотр истории',
-		},
-		{
-			username: 'admin',
-			password: 'admin',
-			role: 'Администратор',
-			description: 'Полный доступ к системе',
-		},
-	]
 
 	const handleInputChange =
 		(field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,32 +48,47 @@ const LoginPage: React.FC = () => {
 
 	const handleSubmit = async (event: React.FormEvent) => {
 		event.preventDefault()
+
+		// Валидация формы
+		if (!formData.username.trim() || !formData.password.trim()) {
+			setError('Заполните все обязательные поля')
+			return
+		}
+
 		setIsLoading(true)
 		setError('')
 
 		try {
 			// Имитация запроса к API
-			const response = await api.post('/auth/login', {
-				username: formData.username,
-				password: formData.password,
-			})
+			const response: IUserData = await api
+				.post('/auth/login', {
+					username: formData.username,
+					password: formData.password,
+				})
+				.then(res => res.data)
 
-			const account = demoAccounts.find(
-				acc =>
-					acc.username === formData.username &&
-					acc.password === formData.password
-			)
+			localStorage.setItem('token', response.token)
 
-			if (account) {
-				console.log('Успешный вход:', account)
-				// В реальном приложении здесь будет сохранение токена и данных пользователя
-				localStorage.setItem('user', JSON.stringify(account))
-				navigate('/')
-			} else {
-				setError('Неверное имя пользователя или пароль')
-			}
-		} catch {
-			setError('Ошибка при входе в систему')
+			const { token, tokenType, ...clearData } = response
+			dispatch(setData(clearData))
+
+			// Триггерим событие для обновления App.tsx
+			window.dispatchEvent(new Event('localStorageChange'))
+
+			enqueueSnackbar('Вход прошел успешно', { variant: 'success' })
+			await new Promise(resolve => setTimeout(resolve, 1000))
+
+			navigate('/catch')
+		} catch (err: any) {
+			// Обработка ошибок от API
+			const errorMessage =
+				err.response?.data?.message ||
+				err.response?.data?.error ||
+				'Ошибка при входе в систему. Проверьте логин и пароль.'
+			setError(errorMessage)
+
+			// Показываем snackbar с ошибкой
+			enqueueSnackbar(errorMessage, { variant: 'error' })
 		} finally {
 			setIsLoading(false)
 		}
@@ -136,9 +145,21 @@ const LoginPage: React.FC = () => {
 					</Typography>
 				</Box>
 
+				{/* Блок с ошибками */}
 				{error && (
-					<Alert severity='error' sx={{ mb: 3 }}>
-						{error}
+					<Alert
+						severity='error'
+						sx={{
+							mb: 3,
+							'& .MuiAlert-message': {
+								width: '100%',
+							},
+						}}
+						onClose={() => setError('')}
+					>
+						<Typography variant='body2' sx={{ fontWeight: 'medium' }}>
+							{error}
+						</Typography>
 					</Alert>
 				)}
 
@@ -152,6 +173,7 @@ const LoginPage: React.FC = () => {
 							onChange={handleInputChange('username')}
 							required
 							fullWidth
+							error={error.includes('логин') || error.includes('пользователь')}
 							InputProps={{
 								startAdornment: (
 									<Person sx={{ color: 'text.secondary', mr: 1 }} />
@@ -168,6 +190,7 @@ const LoginPage: React.FC = () => {
 							onChange={handleInputChange('password')}
 							required
 							fullWidth
+							error={error.includes('пароль')}
 							InputProps={{
 								startAdornment: (
 									<Lock sx={{ color: 'text.secondary', mr: 1 }} />
@@ -199,6 +222,13 @@ const LoginPage: React.FC = () => {
 							py: 1.5,
 							fontSize: '1.1rem',
 							fontWeight: 'bold',
+							background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+							'&:hover': {
+								background: 'linear-gradient(135deg, #1565c0 0%, #1e88e5 100%)',
+							},
+							'&:disabled': {
+								background: '#e0e0e0',
+							},
 						}}
 					>
 						{isLoading ? 'Вход...' : 'Войти'}
@@ -213,7 +243,16 @@ const LoginPage: React.FC = () => {
 
 				{/* Ссылка на регистрацию */}
 				<Box sx={{ textAlign: 'center' }}>
-					<Button component={Link} to='/register' variant='outlined' fullWidth>
+					<Button
+						component={Link}
+						to='/register'
+						variant='outlined'
+						fullWidth
+						sx={{
+							py: 1.5,
+							fontWeight: 'bold',
+						}}
+					>
 						Создать новый аккаунт
 					</Button>
 				</Box>

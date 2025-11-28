@@ -23,14 +23,46 @@ const MainLayout: React.FC<Props> = ({ children }) => {
 	const navigate = useNavigate()
 	const location = useLocation()
 
-	// Навигационные пункты меню
-	const navigationItems = [
-		{ label: 'Ввод улова', path: '/catch' },
-		{ label: 'Мои уловы', path: '/my-catches' },
-		{ label: 'Обзор уловов', path: '/overview' },
-		{ label: 'Квоты', path: '/quotas' },
-		{ label: 'Сообщения', path: '/adminMessages' },
-	]
+	// Проверяем наличие токена
+	const isAuthenticated = !!localStorage.getItem('token')
+
+	// Навигационные пункты меню (только для авторизованных)
+	const navigationItems = isAuthenticated
+		? [
+				{ label: 'Ввод улова', path: '/catch' },
+				{ label: 'Мои уловы', path: '/my-catches' },
+				{ label: 'Обзор уловов', path: '/overview' },
+				{ label: 'Квоты', path: '/quotas' },
+				{ label: 'Сообщения', path: '/adminMessages' },
+		  ]
+		: [
+				// Можно оставить только публичные страницы или вообще убрать
+				// { label: 'Контакты', path: '/contact' },
+		  ]
+
+	// Кнопки для неавторизованных пользователей
+	const authButtons = !isAuthenticated ? (
+		<Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 1, ml: 2 }}>
+			<Button
+				color='inherit'
+				onClick={() => navigate('/login')}
+				variant={location.pathname === '/login' ? 'outlined' : 'text'}
+				size='small'
+				sx={{ borderColor: 'rgba(255,255,255,0.3)' }}
+			>
+				Вход
+			</Button>
+			<Button
+				color='inherit'
+				onClick={() => navigate('/register')}
+				variant={location.pathname === '/register' ? 'outlined' : 'text'}
+				size='small'
+				sx={{ borderColor: 'rgba(255,255,255,0.3)' }}
+			>
+				Регистрация
+			</Button>
+		</Box>
+	) : null
 
 	return (
 		<Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -45,24 +77,26 @@ const MainLayout: React.FC<Props> = ({ children }) => {
 						}}
 					>
 						{/* Логотип и название */}
-						<Stack direction='row' alignItems='center' gap={1}>
-							<PhishingIcon />
-							<Typography
-								variant='h6'
-								component='div'
-								sx={{
-									cursor: 'pointer',
-									fontWeight: 'bold',
-									display: 'flex',
-									alignItems: 'center',
-									gap: 1,
-									flexShrink: 0,
-								}}
-								onClick={() => navigate('/')}
-							>
-								Рыболовный учёт
-							</Typography>
-						</Stack>
+						{!isAuthenticated && (
+							<Stack direction='row' alignItems='center' gap={1}>
+								<PhishingIcon />
+								<Typography
+									variant='h6'
+									component='div'
+									sx={{
+										cursor: 'pointer',
+										fontWeight: 'bold',
+										display: 'flex',
+										alignItems: 'center',
+										gap: 1,
+										flexShrink: 0,
+									}}
+									onClick={() => navigate('/')}
+								>
+									Рыболовный учёт
+								</Typography>
+							</Stack>
+						)}
 
 						{/* Навигация */}
 						<Box
@@ -92,8 +126,16 @@ const MainLayout: React.FC<Props> = ({ children }) => {
 							))}
 						</Box>
 
-						{/* Переключение темы */}
-						<Box sx={{ flexShrink: 0 }}>
+						{/* Правая часть: кнопки авторизации или переключение темы */}
+						<Box
+							sx={{
+								display: 'flex',
+								alignItems: 'center',
+								gap: 1,
+								flexShrink: 0,
+							}}
+						>
+							{authButtons}
 							<IconButton
 								color='inherit'
 								onClick={toggleTheme}

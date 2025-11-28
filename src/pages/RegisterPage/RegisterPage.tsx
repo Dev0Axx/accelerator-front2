@@ -1,4 +1,6 @@
-import React from 'react'
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState } from 'react'
 import {
 	Container,
 	Paper,
@@ -6,119 +8,191 @@ import {
 	Button,
 	Typography,
 	Alert,
-	CircularProgress,
 	Divider,
-	Stepper,
-	Step,
-	StepLabel,
+	TextField,
+	MenuItem,
 	Stack,
+	InputAdornment,
+	IconButton,
+	CircularProgress,
 } from '@mui/material'
-import { ArrowBack } from '@mui/icons-material'
 import { useNavigate, Link } from 'react-router-dom'
-import CompanyInfoStep from './steps/CompanyInfoStep'
-import AddressStep from './steps/AddressStep'
-import CredentialsStep from './steps/CredentialsStep'
-import { useRegisterForm } from '../../hooks/useRegisterForm'
 import DomainAddIcon from '@mui/icons-material/DomainAdd'
+import { Visibility, VisibilityOff } from '@mui/icons-material'
+import { api } from '../../api/api'
+import { organizationTypes } from '../../data/mockData'
+import { useSnackbar } from 'notistack'
+import { type IUserData } from '../../interfaces'
+import { useDispatch } from 'react-redux'
+import { setData } from '../../store/slices/userProfileSlice '
+
+interface FormData {
+	orgName: string
+	orgType: string
+	inn: string
+	username: string
+	email: string
+	password: string
+}
 
 const RegisterPage: React.FC = () => {
 	const navigate = useNavigate()
-	const {
-		activeStep,
-		formData,
-		isLoading,
-		error,
-		handleInputChange,
-		handleCheckboxChange,
-		handleMultiSelectChange,
-		validateStep,
-		setActiveStep,
-		setIsLoading,
-		setError,
-	} = useRegisterForm()
+	const { enqueueSnackbar } = useSnackbar()
+	const dispatch = useDispatch()
 
-	const steps = ['Информация о компании', 'Адрес и контакты', 'Учетные данные']
+	const [formData, setFormData] = useState<FormData>({
+		orgName: '',
+		orgType: 'COMPANY',
+		inn: '',
+		username: '',
+		email: '',
+		password: '',
+	})
 
-	const handleNext = () => {
-		if (!validateStep(activeStep)) {
-			return
+	const [isLoading, setIsLoading] = useState(false)
+	const [error, setError] = useState('')
+	const [showPassword, setShowPassword] = useState(false)
+
+	const handleInputChange = (
+		e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+	) => {
+		const { name, value } = e.target
+
+		// Специальная обработка для ИНН - только цифры
+		if (name === 'inn') {
+			// Удаляем все не-цифры
+			const numbersOnly = value.replace(/\D/g, '')
+			setFormData(prev => ({
+				...prev,
+				[name]: numbersOnly,
+			}))
+		} else {
+			setFormData(prev => ({
+				...prev,
+				[name]: value,
+			}))
 		}
-		setActiveStep(prev => prev + 1)
-		setError('')
+
+		// Очищаем ошибку при изменении поля
+		if (error) setError('')
 	}
 
-	const handleBack = () => {
-		setActiveStep(prev => prev - 1)
-		setError('')
+	const handleClickShowPassword = () => {
+		setShowPassword(!showPassword)
+	}
+
+	const validateForm = (): boolean => {
+		// Проверка на пустые поля
+		const requiredFields: (keyof FormData)[] = [
+			'orgName',
+			'orgType',
+			'inn',
+			'username',
+			'email',
+			'password',
+		]
+
+		for (const field of requiredFields) {
+			if (!formData[field].trim()) {
+				setError(`Поле "${getFieldLabel(field)}" обязательно для заполнения`)
+				return false
+			}
+		}
+
+		// Валидация ИНН (10 или 12 цифр)
+		const innRegex = /^\d{10}$|^\d{12}$/
+		if (!innRegex.test(formData.inn)) {
+			setError('ИНН должен содержать 10 или 12 цифр')
+			return false
+		}
+
+		// Валидация email
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+		if (!emailRegex.test(formData.email)) {
+			setError('Введите корректный email адрес')
+			return false
+		}
+
+		// Валидация пароля (минимум 6 символов)
+		if (formData.password.length < 6) {
+			setError('Пароль должен содержать минимум 6 символов')
+			return false
+		}
+
+		// Валидация логина (только латинские буквы, цифры и подчеркивание)
+		const usernameRegex = /^[a-zA-Z0-9_]+$/
+		if (!usernameRegex.test(formData.username)) {
+			setError(
+				'Логин может содержать только латинские буквы, цифры и символ подчеркивания'
+			)
+			return false
+		}
+
+		return true
+	}
+
+	const getFieldLabel = (field: keyof FormData): string => {
+		const labels = {
+			orgName: 'Название организации',
+			orgType: 'Тип организации',
+			inn: 'ИНН',
+			username: 'Логин',
+			email: 'Email',
+			password: 'Пароль',
+		}
+		return labels[field]
 	}
 
 	const handleSubmit = async (event: React.FormEvent) => {
 		event.preventDefault()
 
-		if (!validateStep(activeStep)) {
+		if (!validateForm()) {
 			return
 		}
 
 		setIsLoading(true)
 		setError('')
 
+		// Сохраняем данные компании
+		const companyData = {
+			orgName: formData.orgName,
+			orgType: formData.orgType,
+			inn: formData.inn,
+			regionId: 1, // Заглушка
+			username: formData.username,
+			email: formData.email,
+			password: formData.password,
+		}
 		try {
-			await new Promise(resolve => setTimeout(resolve, 2000))
-			console.log('Регистрация компании:', formData)
+			const response: IUserData = await api
+				.post('/auth/register-company', companyData)
+				.then(res => res.data)
 
-			const companyData = {
-				companyName: formData.companyName,
-				inn: formData.inn,
-				email: formData.email,
-				username: formData.username,
-				role: 'company_admin',
-				fullName: formData.fullName,
-				position: formData.position,
-			}
+			localStorage.setItem('token', response.token)
 
-			localStorage.setItem('company', JSON.stringify(companyData))
-			localStorage.setItem('user', JSON.stringify(companyData))
-			navigate('/company/dashboard')
-		} catch {
-			setError('Ошибка при регистрации. Попробуйте позже.')
+			const { token, tokenType, ...clearData } = response
+			dispatch(setData(clearData))
+
+			// Триггерим событие для обновления App.tsx
+			window.dispatchEvent(new Event('localStorageChange'))
+
+			enqueueSnackbar('Регистрация прошла успешно', { variant: 'success' })
+			await new Promise(resolve => setTimeout(resolve, 1000))
+
+			navigate('/catch')
+		} catch (err: any) {
+			setError(
+				err.response?.data?.message ||
+					'Ошибка при регистрации. Попробуйте позже.'
+			)
 		} finally {
 			setIsLoading(false)
 		}
 	}
 
-	const getStepContent = (step: number) => {
-		switch (step) {
-			case 0:
-				return (
-					<CompanyInfoStep
-						formData={formData}
-						onInputChange={handleInputChange}
-					/>
-				)
-			case 1:
-				return (
-					<AddressStep
-						formData={formData}
-						onInputChange={handleInputChange}
-						onMultiSelectChange={handleMultiSelectChange}
-					/>
-				)
-			case 2:
-				return (
-					<CredentialsStep
-						formData={formData}
-						onInputChange={handleInputChange}
-						onCheckboxChange={handleCheckboxChange}
-					/>
-				)
-			default:
-				return 'Неизвестный шаг'
-		}
-	}
-
 	return (
 		<Container
-			maxWidth='lg'
+			maxWidth='md'
 			sx={{
 				minHeight: '100vh',
 				display: 'flex',
@@ -141,6 +215,7 @@ const RegisterPage: React.FC = () => {
 						alignItems='center'
 						gap={3}
 						justifyContent='center'
+						sx={{ mb: 2 }}
 					>
 						<DomainAddIcon sx={{ fontSize: '60px' }} color='primary' />
 						<Typography
@@ -164,53 +239,129 @@ const RegisterPage: React.FC = () => {
 					</Typography>
 				</Box>
 
-				<Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-					{steps.map(label => (
-						<Step key={label}>
-							<StepLabel>{label}</StepLabel>
-						</Step>
-					))}
-				</Stepper>
-
 				{error && (
 					<Alert severity='error' sx={{ mb: 3 }}>
 						{error}
 					</Alert>
 				)}
 
-				<Box
-					component='form'
-					onSubmit={activeStep === steps.length - 1 ? handleSubmit : undefined}
-				>
-					{getStepContent(activeStep)}
+				<Box component='form' onSubmit={handleSubmit}>
+					<Stack spacing={3}>
+						{/* Название организации */}
+						<TextField
+							fullWidth
+							label='Название организации'
+							name='orgName'
+							value={formData.orgName}
+							onChange={handleInputChange}
+							required
+							placeholder='ООО Рыбмастер'
+							error={error.includes('Название организации')}
+						/>
 
-					<Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-						<Button
-							onClick={handleBack}
-							disabled={activeStep === 0}
-							startIcon={<ArrowBack />}
+						{/* Тип организации */}
+						<TextField
+							select
+							fullWidth
+							label='Тип организации'
+							name='orgType'
+							value={formData.orgType}
+							onChange={handleInputChange}
+							required
+							error={error.includes('Тип организации')}
 						>
-							Назад
-						</Button>
+							{organizationTypes.map(type => (
+								<MenuItem key={type.value} value={type.value}>
+									{type.label}
+								</MenuItem>
+							))}
+						</TextField>
 
-						{activeStep === steps.length - 1 ? (
-							<Button
-								type='submit'
-								variant='contained'
-								disabled={isLoading}
-								size='large'
-							>
-								{isLoading ? (
-									<CircularProgress size={24} />
-								) : (
-									'Зарегистрировать компанию'
-								)}
-							</Button>
-						) : (
-							<Button variant='contained' onClick={handleNext} size='large'>
-								Далее
-							</Button>
-						)}
+						{/* ИНН */}
+						<TextField
+							fullWidth
+							label='ИНН'
+							name='inn'
+							value={formData.inn}
+							onChange={handleInputChange}
+							required
+							placeholder='1234567890'
+							inputProps={{
+								maxLength: 12,
+								inputMode: 'numeric',
+								pattern: '[0-9]*',
+							}}
+							error={error.includes('ИНН')}
+							helperText='10 цифр для юрлица, 12 цифр для ИП'
+						/>
+
+						{/* Логин */}
+						<TextField
+							fullWidth
+							label='Логин'
+							name='username'
+							value={formData.username}
+							onChange={handleInputChange}
+							required
+							placeholder='fish_admin'
+							error={error.includes('Логин')}
+							helperText='Только латинские буквы, цифры и символ _'
+						/>
+
+						{/* Email */}
+						<TextField
+							fullWidth
+							label='Email'
+							name='email'
+							type='email'
+							value={formData.email}
+							onChange={handleInputChange}
+							required
+							placeholder='admin@fishmaster.ru'
+							error={error.includes('Email') || error.includes('email')}
+						/>
+
+						{/* Пароль */}
+						<TextField
+							fullWidth
+							label='Пароль'
+							name='password'
+							type={showPassword ? 'text' : 'password'}
+							value={formData.password}
+							onChange={handleInputChange}
+							required
+							placeholder='Secret123!'
+							error={error.includes('Пароль')}
+							helperText='Минимум 6 символов'
+							InputProps={{
+								endAdornment: (
+									<InputAdornment position='end'>
+										<IconButton
+											aria-label='toggle password visibility'
+											onClick={handleClickShowPassword}
+											edge='end'
+										>
+											{showPassword ? <VisibilityOff /> : <Visibility />}
+										</IconButton>
+									</InputAdornment>
+								),
+							}}
+						/>
+					</Stack>
+
+					<Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4 }}>
+						<Button
+							type='submit'
+							variant='contained'
+							disabled={isLoading}
+							size='large'
+						>
+							{isLoading ? (
+								<CircularProgress size={24} />
+							) : (
+								'Зарегистрировать компанию'
+							)}
+						</Button>
 					</Box>
 				</Box>
 
@@ -228,8 +379,7 @@ const RegisterPage: React.FC = () => {
 
 				<Box sx={{ mt: 3, textAlign: 'center' }}>
 					<Typography variant='caption' color='text.secondary'>
-						После регистрации вы получите роль "Администратор компании". Для
-						подтверждения регистрации может потребоваться проверка документов.
+						После регистрации вы получите роль "Администратор компании".
 					</Typography>
 				</Box>
 			</Paper>
