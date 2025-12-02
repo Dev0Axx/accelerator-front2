@@ -6,34 +6,26 @@ import QuotaWarning from './QuotaWarning'
 import RecentCatches from './RecentCatches'
 import EditNoteOutlinedIcon from '@mui/icons-material/EditNoteOutlined'
 import CompanyQuotas from './CompanyQuotas'
+import useSWR from 'swr'
+import { api } from '../../api/api'
+import type { FishingQuota } from '../../interfaces'
+import { useAppSelector } from '../../hooks/storeHooks'
 
 const CatchPage: React.FC = () => {
-	// Mock данные квот компании
-	const companyQuotas = [
-		{
-			id: '1',
-			species: 'Хамса',
-			totalQuota: 10000,
-			usedQuota: 7500,
-			region: 'Азовское море',
-		},
-		{
-			id: '2',
-			species: 'Тюлька',
-			totalQuota: 8000,
-			usedQuota: 3200,
-			region: 'Азовское море',
-		},
-		{
-			id: '3',
-			species: 'Кефаль',
-			totalQuota: 5000,
-			usedQuota: 4800,
-			region: 'Чёрное море',
-		},
-	]
+	const organizationId = useAppSelector(
+		state => state.userProfile.organization.id
+	)
 
-	const hasQuotas = companyQuotas.length > 0
+	const fetcher = async (url: string): Promise<FishingQuota[]> => {
+		const token = localStorage.getItem('token')
+		const response = await api.get(url, {
+			headers: {
+				Authorization: token ? `Bearer ${token}` : '',
+			},
+		})
+		return response.data.content
+	}
+	const { data, isLoading, error } = useSWR('/my/quotas/allocation', fetcher)
 
 	return (
 		<Box sx={{ py: 4 }}>
@@ -52,7 +44,7 @@ const CatchPage: React.FC = () => {
 				</Typography>
 			</Stack>
 
-			{hasQuotas ? (
+			{data && data?.length > 0 ? (
 				<>
 					<Typography
 						variant='body1'
@@ -65,16 +57,13 @@ const CatchPage: React.FC = () => {
 
 					<Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
 						{/* Квоты компании */}
-						<CompanyQuotas quotas={companyQuotas} />
-
+						<CompanyQuotas quotas={data} />
 						{/* Предупреждение о квотах */}
 						<QuotaWarning />
-
-						{/* Основная форма */}
-						<Paper sx={{ p: 4 }} elevation={3}>
+						Основная форма
+						{/* <Paper sx={{ p: 4 }} elevation={3}>
 							<CatchForm availableSpecies={companyQuotas.map(q => q.species)} />
-						</Paper>
-
+						</Paper> */}
 						{/* Последние уловы */}
 						<RecentCatches />
 					</Box>

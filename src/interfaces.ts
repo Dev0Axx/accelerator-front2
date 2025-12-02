@@ -45,3 +45,51 @@ export interface Company {
 	orgType: string
 	inn: string
 }
+
+// Интерфейс для сортировки
+export interface Sort {
+	unsorted: boolean
+	sorted: boolean
+	empty: boolean
+}
+
+// Интерфейс для пагинации
+export interface Pageable {
+	pageNumber: number
+	pageSize: number
+	sort: Sort
+	offset: number
+	paged: boolean
+	unpaged: boolean
+}
+
+export interface FishingQuota {
+	id: number
+	organizationId: number
+	organizationName: string
+	speciesId: number
+	speciesCommonName: string
+	speciesScientificName: string
+	regionId: number
+	regionName: string
+	regionCode: string
+	periodStart: string // Дата в формате YYYY-MM-DD
+	periodEnd: string // Дата в формате YYYY-MM-DD
+	limitKg: number // Общая квота в кг
+	usedKg: number | null // Использованная квота в кг
+}
+
+// Интерфейс для пагинированного ответа
+export interface PageResponse {
+	content: FishingQuota[]
+	pageable: Pageable
+	totalPages: number
+	totalElements: number
+	last: boolean
+	numberOfElements: number
+	first: boolean
+	size: number
+	number: number
+	sort: Sort
+	empty: boolean
+}

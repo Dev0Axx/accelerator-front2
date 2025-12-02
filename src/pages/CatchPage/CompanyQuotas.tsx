@@ -11,17 +11,10 @@ import {
 	CardContent,
 } from '@mui/material'
 import { Business, TrendingUp } from '@mui/icons-material'
-
-interface Quota {
-	id: string
-	species: string
-	totalQuota: number
-	usedQuota: number
-	region: string
-}
+import type { FishingQuota } from '../../interfaces'
 
 interface CompanyQuotasProps {
-	quotas: Quota[]
+	quotas: FishingQuota[]
 }
 
 const CompanyQuotas: React.FC<CompanyQuotasProps> = ({ quotas }) => {
@@ -34,11 +27,10 @@ const CompanyQuotas: React.FC<CompanyQuotasProps> = ({ quotas }) => {
 		if (percentage >= 75) return 'warning'
 		return 'primary'
 	}
-
+	return
 	return (
-		<Paper
-			//  sx={{ p: 3 }}
-			elevation={0}
+		<Box
+		//  sx={{ p: 3 }}
 		>
 			<Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
 				<Business color='primary' />
@@ -129,7 +121,7 @@ const CompanyQuotas: React.FC<CompanyQuotasProps> = ({ quotas }) => {
 					Нет доступных квот
 				</Typography>
 			)}
-		</Paper>
+		</Box>
 	)
 }
 
