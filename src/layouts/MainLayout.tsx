@@ -31,6 +31,14 @@ const MainLayout: React.FC<Props> = ({ children }) => {
 			? [
 					{ label: 'Ввод улова', path: '/catch' },
 					{ label: 'Мои уловы', path: '/my-catches' },
+					{
+						label: 'Регистрация пользователей',
+						path: '/register_company_user',
+					},
+					{
+						label: 'Связь',
+						path: '/contact',
+					},
 			  ]
 			: []),
 		...(roles.includes('ADMIN')

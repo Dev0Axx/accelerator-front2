@@ -20,6 +20,10 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { ru } from 'date-fns/locale'
 import { Save, Clear, Assignment, Info } from '@mui/icons-material'
+import useSWR, { useSWRConfig } from 'swr'
+import { useSnackbar } from 'notistack'
+import { api } from '../../api/api'
+import { useAppSelector } from '../../hooks/storeHooks'
 
 // Типы данных
 interface CatchData {
@@ -32,8 +36,9 @@ interface CatchData {
 
 interface Species {
 	id: string
-	name: string
 	scientificName: string
+	commonName: string
+	endangered: boolean
 }
 
 interface Region {
@@ -42,11 +47,19 @@ interface Region {
 	code: string
 }
 
-interface CatchFormProps {
-	availableSpecies: string[]
+const formatDateToYYYYMMDD = (date: Date) => {
+	const year = date.getFullYear()
+	const month = (date.getMonth() + 1).toString().padStart(2, '0')
+	const day = date.getDate().toString().padStart(2, '0')
+	return `${year}-${month}-${day}`
 }
 
-const CatchForm: React.FC<CatchFormProps> = ({ availableSpecies }) => {
+const CatchForm: React.FC = () => {
+	const { enqueueSnackbar } = useSnackbar()
+	const { mutate } = useSWRConfig()
+
+	const userProfile = useAppSelector(state => state.userProfile)
+
 	const theme = useTheme()
 	const [formData, setFormData] = useState<CatchData>({
 		fishingDate: new Date(),
@@ -64,26 +77,8 @@ const CatchForm: React.FC<CatchFormProps> = ({ availableSpecies }) => {
 		region: false,
 	})
 
-	// Mock данные
-	const species: Species[] = [
-		{ id: '1', name: 'Хамса', scientificName: 'Engraulis encrasicolus' },
-		{ id: '2', name: 'Тюлька', scientificName: 'Clupeonella cultriventris' },
-		{ id: '3', name: 'Кефаль', scientificName: 'Mugil cephalus' },
-		{ id: '4', name: 'Камбала-калкан', scientificName: 'Psetta maxima' },
-		{ id: '5', name: 'Белуга', scientificName: 'Huso huso' },
-		{
-			id: '6',
-			name: 'Осётр русский',
-			scientificName: 'Acipenser gueldenstaedtii',
-		},
-	].filter(spec => availableSpecies.includes(spec.name))
-
-	const regions: Region[] = [
-		{ id: '1', name: 'Азовское море', code: 'AZOV' },
-		{ id: '2', name: 'Чёрное море', code: 'BLACK' },
-		{ id: '3', name: 'Баренцево море', code: 'BARENTS' },
-		{ id: '4', name: 'Балтийское море', code: 'BALTIC' },
-	]
+	const [species, setSpecies] = useState<Species[]>([])
+	const [regions, setRegions] = useState<Region[]>([])
 
 	const handleInputChange =
 		(field: keyof CatchData) =>
@@ -127,12 +122,41 @@ const CatchForm: React.FC<CatchFormProps> = ({ availableSpecies }) => {
 		setIsSubmitting(true)
 
 		try {
-			await new Promise(resolve => setTimeout(resolve, 1500))
-			console.log('Данные улова:', formData)
+			const token = localStorage.getItem('token')
+
+			await api.post(
+				'/catch-reports',
+				{
+					organizationId: userProfile.organization.id,
+					reportedBy: userProfile.user.id,
+					regionId: Number(formData.region),
+					speciesId: Number(formData.species),
+					fishingDate: formData.fishingDate,
+					weightKg: Number(formData.weight),
+					notes: formData.notes,
+					verified: false,
+				},
+				{
+					headers: {
+						Authorization: token ? `Bearer ${token}` : '',
+					},
+				}
+			)
+
+			enqueueSnackbar('Улов успешно сохранен', { variant: 'success' })
+
+			mutate('/catch-reports/my/last3/table')
+			mutate('/my/quotas/allocation')
+
 			setSubmitSuccess(true)
 			handleClear()
 		} catch (error) {
-			console.error('Ошибка при отправке:', error)
+			console.log(error)
+			enqueueSnackbar(
+				'Произошла ошибка при установлении квоты: ' +
+					error.response.data.message,
+				{ variant: 'error' }
+			)
 		} finally {
 			setIsSubmitting(false)
 		}
@@ -167,6 +191,26 @@ const CatchForm: React.FC<CatchFormProps> = ({ availableSpecies }) => {
 		formData.weight &&
 		formData.region &&
 		parseFloat(formData.weight) > 0
+
+	const fetcher = async (url: string) => {
+		const token = localStorage.getItem('token')
+		await api
+			.get(url, {
+				headers: {
+					Authorization: token ? `Bearer ${token}` : '',
+				},
+			})
+			.then(res => {
+				setSpecies(res.data.species)
+				setRegions(res.data.regions)
+				return res.data
+			})
+	}
+
+	const { data, isLoading, error } = useSWR(
+		'/catch-reports/my/form-meta',
+		fetcher
+	)
 
 	return (
 		<LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
@@ -252,7 +296,9 @@ const CatchForm: React.FC<CatchFormProps> = ({ availableSpecies }) => {
 									{species.map(spec => (
 										<MenuItem key={spec.id} value={spec.id}>
 											<Box>
-												<Typography variant='body1'>{spec.name}</Typography>
+												<Typography variant='body1'>
+													{spec.commonName}
+												</Typography>
 												<Typography variant='caption' color='text.secondary'>
 													{spec.scientificName}
 												</Typography>

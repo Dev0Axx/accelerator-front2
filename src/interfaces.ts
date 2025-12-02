@@ -76,11 +76,11 @@ export interface FishingQuota {
 	periodStart: string // Дата в формате YYYY-MM-DD
 	periodEnd: string // Дата в формате YYYY-MM-DD
 	limitKg: number // Общая квота в кг
-	usedKg: number | null // Использованная квота в кг
+	usedKg: number
 }
 
 // Интерфейс для пагинированного ответа
-export interface PageResponse {
+export interface PageResponseQuotasCompany {
 	content: FishingQuota[]
 	pageable: Pageable
 	totalPages: number

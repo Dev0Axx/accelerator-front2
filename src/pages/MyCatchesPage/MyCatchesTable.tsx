@@ -6,6 +6,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import useSwr from 'swr'
 import { api } from '../../api/api'
+import { useAppSelector } from '../../hooks/storeHooks'
 
 interface TableResponse {
 	columns: Array<{
@@ -16,6 +17,8 @@ interface TableResponse {
 }
 
 const MyCatchesTable: React.FC = () => {
+	const userProfile = useAppSelector(state => state.userProfile)
+
 	const fetcher = async (url: string): Promise<TableResponse> => {
 		const token = localStorage.getItem('token')
 		const response = await api.get(url, {
@@ -27,7 +30,7 @@ const MyCatchesTable: React.FC = () => {
 	}
 
 	const { data, isLoading, error } = useSwr(
-		'/catch-reports/organization/2/table',
+		`/catch-reports/organization/${userProfile.organization.id}/table`,
 		fetcher
 	)
 

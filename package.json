@@ -20,10 +20,12 @@
 		"axios": "^1.12.2",
 		"date-fns": "^4.1.0",
 		"dayjs": "^1.11.19",
+		"framer-motion": "^12.23.25",
 		"material-react-table": "^3.2.1",
 		"notistack": "^3.0.2",
 		"react": "^19.1.1",
 		"react-dom": "^19.1.1",
+		"react-intersection-observer": "^10.0.0",
 		"react-redux": "^9.2.0",
 		"react-router-dom": "^7.9.4",
 		"swr": "^2.3.6"

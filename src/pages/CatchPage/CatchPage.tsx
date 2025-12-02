@@ -44,45 +44,41 @@ const CatchPage: React.FC = () => {
 				</Typography>
 			</Stack>
 
-			{data && data?.length > 0 ? (
-				<>
-					<Typography
-						variant='body1'
-						color='text.secondary'
-						sx={{ mb: 4, mt: 2 }}
-					>
-						Заполните информацию о пойманной рыбе. Система автоматически
-						проверит доступные квоты.
-					</Typography>
+			<Typography variant='body1' color='text.secondary' sx={{ mb: 4, mt: 2 }}>
+				Заполните информацию о пойманной рыбе. Система автоматически проверит
+				доступные квоты.
+			</Typography>
 
-					<Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-						{/* Квоты компании */}
+			<Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+				{/* Квоты компании */}
+				{data && data.length > 0 ? (
+					<>
 						<CompanyQuotas quotas={data} />
-						{/* Предупреждение о квотах */}
-						<QuotaWarning />
-						Основная форма
-						{/* <Paper sx={{ p: 4 }} elevation={3}>
-							<CatchForm availableSpecies={companyQuotas.map(q => q.species)} />
-						</Paper> */}
+
+						<Paper sx={{ p: 4 }} elevation={3}>
+							<CatchForm />
+						</Paper>
 						{/* Последние уловы */}
 						<RecentCatches />
-					</Box>
-				</>
-			) : (
-				<>
-					<Alert severity='warning' sx={{ my: 2 }}>
-						<Typography variant='h6' gutterBottom>
-							Нет доступных квот
-						</Typography>
-						<Typography variant='body1'>
-							У вашей компании нет активных квот на вылов рыбы. Обратитесь к
-							администратору для получения квот.
-						</Typography>
-					</Alert>
-					{/* Последние уловы */}
-					<RecentCatches />
-				</>
-			)}
+					</>
+				) : (
+					<>
+						<Alert severity='warning' sx={{ my: 2 }}>
+							<Typography variant='h6' gutterBottom>
+								Нет доступных квот
+							</Typography>
+							<Typography variant='body1'>
+								У вашей компании нет активных квот на вылов рыбы. Обратитесь к
+								администратору для получения квот.
+							</Typography>
+						</Alert>
+						{/* Последние уловы */}
+						<RecentCatches />
+					</>
+				)}
+				{/* Предупреждение о квотах */}
+				{/* <QuotaWarning /> */}
+			</Box>
 		</Box>
 	)
 }

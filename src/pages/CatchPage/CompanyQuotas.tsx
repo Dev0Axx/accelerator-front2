@@ -27,25 +27,22 @@ const CompanyQuotas: React.FC<CompanyQuotasProps> = ({ quotas }) => {
 		if (percentage >= 75) return 'warning'
 		return 'primary'
 	}
-	return
+
 	return (
 		<Box
 		//  sx={{ p: 3 }}
 		>
 			<Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-				<Business color='primary' />
+				{/* <Business color='primary' /> */}
 				<Typography variant='h6' sx={{ fontWeight: 'bold' }}>
-					Квоты компании
+					Ваши квоты
 				</Typography>
 			</Box>
 
 			<Stack spacing={2}>
 				{quotas.map(quota => {
-					const percentage = getQuotaPercentage(
-						quota.usedQuota,
-						quota.totalQuota
-					)
-					const remaining = getRemainingQuota(quota.usedQuota, quota.totalQuota)
+					const percentage = getQuotaPercentage(quota.usedKg, quota.limitKg)
+					const remaining = getRemainingQuota(quota.usedKg, quota.limitKg)
 
 					return (
 						<Card key={quota.id} elevation={3}>
@@ -60,16 +57,19 @@ const CompanyQuotas: React.FC<CompanyQuotasProps> = ({ quotas }) => {
 								>
 									<Box>
 										<Typography variant='h6' gutterBottom>
-											{quota.species}
+											{quota.speciesCommonName}
 										</Typography>
 										<Typography variant='body2' color='text.secondary'>
-											{quota.region}
+											{quota.regionName}
+										</Typography>
+										<Typography variant='body2' color='text.secondary'>
+											{quota.periodStart} - {quota.periodEnd}
 										</Typography>
 									</Box>
 									<Chip
 										label={`Осталось: ${remaining.toLocaleString()} кг`}
 										color={
-											remaining < quota.totalQuota * 0.1 ? 'error' : 'primary'
+											remaining < quota.limitKg * 0.1 ? 'error' : 'primary'
 										}
 										variant='outlined'
 									/>
@@ -84,10 +84,10 @@ const CompanyQuotas: React.FC<CompanyQuotasProps> = ({ quotas }) => {
 										}}
 									>
 										<Typography variant='body2' color='text.secondary'>
-											Использовано: {quota.usedQuota.toLocaleString()} кг
+											Использовано: {quota.usedKg.toLocaleString()} кг
 										</Typography>
 										<Typography variant='body2' color='text.secondary'>
-											Всего: {quota.totalQuota.toLocaleString()} кг
+											Всего: {quota.limitKg.toLocaleString()} кг
 										</Typography>
 									</Box>
 									<LinearProgress

@@ -11,6 +11,7 @@ import {
 import { CalendarToday, Scale, TrendingUp, Place } from '@mui/icons-material'
 import useSwr from 'swr'
 import { api } from '../../api/api'
+import { useAppSelector } from '../../hooks/storeHooks'
 
 interface StatsData {
 	organizationId: number
@@ -24,6 +25,8 @@ interface StatsData {
 const CatchSummary: React.FC = () => {
 	const theme = useTheme()
 
+	const userProfile = useAppSelector(state => state.userProfile)
+
 	const fetcher = async (url: string): Promise<StatsData> => {
 		const token = localStorage.getItem('token')
 		const response = await api.get(url, {
@@ -35,7 +38,7 @@ const CatchSummary: React.FC = () => {
 	}
 
 	const { data, isLoading, error } = useSwr(
-		'/catch-reports/organization/2/stats',
+		`/catch-reports/organization/${userProfile.organization.id}/stats`,
 		fetcher
 	)
 

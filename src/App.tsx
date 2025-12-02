@@ -1,8 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-// App.tsx
-import { useState, useEffect, useLayoutEffect } from 'react'
+import { useLayoutEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
-import { CssBaseline, CircularProgress, Box } from '@mui/material'
+import { CssBaseline } from '@mui/material'
 import { ThemeProvider } from './contexts/ThemeContext'
 import MainLayout from './layouts/MainLayout'
 import HomePage from './pages/HomePage/HomePage'
@@ -21,6 +20,8 @@ import WinterAnimation from './components/Winter/Winter'
 import NotFoundPage from './components/404'
 import { useAppSelector } from './hooks/storeHooks'
 import { useNavigate } from 'react-router-dom'
+import Garland from './components/Winter/Garland'
+import RegisterCompanyUser from './pages/RegisterCompanyUser/RegisterCompanyUser'
 
 function App() {
 	const navigate = useNavigate()
@@ -42,6 +43,7 @@ function App() {
 		<ThemeProvider>
 			<CssBaseline />
 			<WinterAnimation />
+			<Garland />
 			<MainLayout>
 				<Routes>
 					{/* Публичные маршруты (доступны всем) */}
@@ -68,6 +70,15 @@ function App() {
 						element={
 							<ProtectedRoute requiredRoles={['FISHERMAN']} requireAuth={true}>
 								<MyCatchesPage />
+							</ProtectedRoute>
+						}
+					/>
+
+					<Route
+						path='/register_company_user'
+						element={
+							<ProtectedRoute requiredRoles={['FISHERMAN']} requireAuth={true}>
+								<RegisterCompanyUser />
 							</ProtectedRoute>
 						}
 					/>
