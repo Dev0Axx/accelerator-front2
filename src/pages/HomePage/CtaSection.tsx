@@ -1,12 +1,13 @@
 import React from 'react'
-import { Box, Typography, Button, Container } from '@mui/material'
+import { Box, Typography, Button, Container, Paper } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 
 const CtaSection: React.FC = () => {
 	const navigate = useNavigate()
 
 	return (
-		<Box
+		<Paper
+			elevation={3}
 			sx={{
 				bgcolor: 'primary.main',
 				color: 'white',
@@ -97,7 +98,7 @@ const CtaSection: React.FC = () => {
 					</Button>
 				</Box>
 			</Container>
-		</Box>
+		</Paper>
 	)
 }
 

@@ -1,25 +1,10 @@
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
+import type { IUserData } from '../../interfaces'
 
-interface IInitialState {
-	user: {
-		id: number | null
-		organizationId: number | null
-		username: string
-		email: string
-		password: string | null
-		active: boolean
-	}
-	organization: {
-		id: number | null
-		name: string
-		orgType: string
-		inn: string
-		regionId: number | null
-	}
-}
-
-const initialState: IInitialState = {
+const initialState: IUserData = {
+	token: null,
+	tokenType: '',
 	user: {
 		id: null,
 		organizationId: null,
@@ -35,15 +20,27 @@ const initialState: IInitialState = {
 		inn: '',
 		regionId: null,
 	},
+	roles: [],
+	expired: null,
+	valid: null,
+	error: null,
+	message: null,
 }
 
 const UserProfileSlice = createSlice({
 	name: 'userProfile',
 	initialState,
 	reducers: {
-		setData: (state, action: PayloadAction<IInitialState>) => {
+		setData: (state, action: PayloadAction<IUserData>) => {
+			state.token = action.payload.token
+			state.tokenType = action.payload.tokenType
 			state.user = action.payload.user
 			state.organization = action.payload.organization
+			state.roles = action.payload.roles
+			state.expired = action.payload.expired
+			state.valid = action.payload.valid
+			state.error = action.payload.error
+			state.message = action.payload.message
 		},
 	},
 })

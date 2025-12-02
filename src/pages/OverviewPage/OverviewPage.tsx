@@ -24,7 +24,7 @@ const OverviewPage: React.FC = () => {
 
 				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
 					{/* Фильтры */}
-					<OverviewFilters />
+					{/* <OverviewFilters /> */}
 
 					{/* Статистические карточки */}
 					{/* <StatisticsCards /> */}

@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import { Container, Typography, Box, Button, Tabs, Tab } from '@mui/material'
 import { Add } from '@mui/icons-material'
-import QuotasList from './QuotasList'
-import CompanyQuotasList from './CompanyQuotasList'
-import QuotaStatistics from './QuotaStatistics'
+import QuotasList from './QuotasTable'
+import CompanyQuotasList from './CompanyQuotasTable'
+// import QuotaStatistics from './QuotaStatistics'
 import SetQuotaModal from './SetQuotaModal'
 import SetCompanyQuotaModal from './SetCompanyQuotaModal'
 
@@ -78,10 +78,11 @@ const QuotasPage: React.FC = () => {
 
 				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
 					{/* Статистика квот */}
-					<QuotaStatistics />
+					{/* <QuotaStatistics /> */}
 
 					{/* Список квот */}
 					{activeTab === 0 ? <QuotasList /> : <CompanyQuotasList />}
+					{/* {activeTab === 1 && <CompanyQuotasList />} */}
 
 					{/* Модальные окна */}
 					<SetQuotaModal

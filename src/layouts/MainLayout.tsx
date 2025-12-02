@@ -13,35 +13,37 @@ import { Brightness4, Brightness7 } from '@mui/icons-material'
 import { useTheme } from '../contexts/ThemeContext'
 import { useNavigate, useLocation } from 'react-router-dom'
 import PhishingIcon from '@mui/icons-material/Phishing'
+import { useAppSelector } from '../hooks/storeHooks'
 
 interface Props {
 	children: React.ReactNode
 }
 
 const MainLayout: React.FC<Props> = ({ children }) => {
+	const { token, roles } = useAppSelector(state => state.userProfile)
+
 	const { mode, toggleTheme } = useTheme()
 	const navigate = useNavigate()
 	const location = useLocation()
 
-	// Проверяем наличие токена
-	const isAuthenticated = !!localStorage.getItem('token')
-
-	// Навигационные пункты меню (только для авторизованных)
-	const navigationItems = isAuthenticated
-		? [
-				{ label: 'Ввод улова', path: '/catch' },
-				{ label: 'Мои уловы', path: '/my-catches' },
-				{ label: 'Обзор уловов', path: '/overview' },
-				{ label: 'Квоты', path: '/quotas' },
-				{ label: 'Сообщения', path: '/adminMessages' },
-		  ]
-		: [
-				// Можно оставить только публичные страницы или вообще убрать
-				// { label: 'Контакты', path: '/contact' },
-		  ]
+	const navigationItems = [
+		...(roles.includes('FISHERMAN')
+			? [
+					{ label: 'Ввод улова', path: '/catch' },
+					{ label: 'Мои уловы', path: '/my-catches' },
+			  ]
+			: []),
+		...(roles.includes('ADMIN')
+			? [
+					{ label: 'Обзор уловов', path: '/overview' },
+					{ label: 'Квоты', path: '/quotas' },
+					{ label: 'Сообщения', path: '/adminMessages' },
+			  ]
+			: []),
+	]
 
 	// Кнопки для неавторизованных пользователей
-	const authButtons = !isAuthenticated ? (
+	const authButtons = !token ? (
 		<Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 1, ml: 2 }}>
 			<Button
 				color='inherit'
@@ -65,7 +67,17 @@ const MainLayout: React.FC<Props> = ({ children }) => {
 	) : null
 
 	return (
-		<Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+		<Box
+			sx={{
+				display: 'flex',
+				flexDirection: 'column',
+				minHeight: '100vh',
+				background:
+					mode === 'light'
+						? 'linear-gradient(180deg, #f8f9fa 0%, #f1f3f4 50%, #e8eaed 100%)'
+						: '',
+			}}
+		>
 			{/* Шапка */}
 			<AppBar position='static' sx={{ flexShrink: 0 }}>
 				<Container maxWidth='lg' disableGutters>
@@ -77,7 +89,7 @@ const MainLayout: React.FC<Props> = ({ children }) => {
 						}}
 					>
 						{/* Логотип и название */}
-						{!isAuthenticated && (
+						{!token && (
 							<Stack direction='row' alignItems='center' gap={1}>
 								<PhishingIcon />
 								<Typography
@@ -153,6 +165,7 @@ const MainLayout: React.FC<Props> = ({ children }) => {
 			</AppBar>
 
 			{/* Основной контент */}
+
 			<Container
 				component='main'
 				maxWidth='lg'

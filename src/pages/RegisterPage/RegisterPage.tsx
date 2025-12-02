@@ -15,6 +15,7 @@ import {
 	InputAdornment,
 	IconButton,
 	CircularProgress,
+	Fade,
 } from '@mui/material'
 import { useNavigate, Link } from 'react-router-dom'
 import DomainAddIcon from '@mui/icons-material/DomainAdd'
@@ -158,7 +159,6 @@ const RegisterPage: React.FC = () => {
 			orgName: formData.orgName,
 			orgType: formData.orgType,
 			inn: formData.inn,
-			regionId: 1, // Заглушка
 			username: formData.username,
 			email: formData.email,
 			password: formData.password,
@@ -168,18 +168,20 @@ const RegisterPage: React.FC = () => {
 				.post('/auth/register-company', companyData)
 				.then(res => res.data)
 
-			localStorage.setItem('token', response.token)
+			localStorage.setItem('token', response.token || '')
 
-			const { token, tokenType, ...clearData } = response
-			dispatch(setData(clearData))
+			dispatch(setData(response))
 
 			// Триггерим событие для обновления App.tsx
 			window.dispatchEvent(new Event('localStorageChange'))
 
-			enqueueSnackbar('Регистрация прошла успешно', { variant: 'success' })
+			enqueueSnackbar('Регистрация компании и пользователя прошла успешно', {
+				variant: 'success',
+			})
 			await new Promise(resolve => setTimeout(resolve, 1000))
 
-			navigate('/catch')
+			if (response.roles.includes('FISHERMAN')) navigate('/catch')
+			else navigate('/quotas')
 		} catch (err: any) {
 			setError(
 				err.response?.data?.message ||
@@ -191,199 +193,191 @@ const RegisterPage: React.FC = () => {
 	}
 
 	return (
-		<Container
-			maxWidth='md'
-			sx={{
-				minHeight: '100vh',
-				display: 'flex',
-				alignItems: 'center',
-				justifyContent: 'center',
-				py: 4,
-			}}
-		>
-			<Paper
-				elevation={8}
+		<Fade in={true} timeout={600}>
+			<Container
+				maxWidth='md'
 				sx={{
-					width: '100%',
-					p: 4,
-					borderRadius: 3,
+					minHeight: '100vh',
+					display: 'flex',
+					alignItems: 'center',
+					justifyContent: 'center',
+					py: 4,
 				}}
 			>
-				<Box sx={{ textAlign: 'center', mb: 4 }}>
-					<Stack
-						direction='row'
-						alignItems='center'
-						gap={3}
-						justifyContent='center'
-						sx={{ mb: 2 }}
-					>
-						<DomainAddIcon sx={{ fontSize: '60px' }} color='primary' />
-						<Typography
-							variant='h3'
-							component='h1'
-							gutterBottom
-							sx={{
-								m: 0,
-								fontWeight: 'bold',
-								background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
-								backgroundClip: 'text',
-								WebkitBackgroundClip: 'text',
-								color: 'transparent',
-							}}
+				<Paper
+					elevation={8}
+					sx={{
+						width: '100%',
+						p: 4,
+						borderRadius: 2,
+					}}
+				>
+					<Box sx={{ textAlign: 'center', mb: 4 }}>
+						<Stack
+							direction='row'
+							alignItems='center'
+							gap={3}
+							justifyContent='center'
+							sx={{ mb: 2 }}
 						>
-							Регистрация компании
+							<DomainAddIcon sx={{ fontSize: '60px' }} color='primary' />
+							<Typography
+								variant='h3'
+								component='h1'
+								gutterBottom
+								sx={{
+									m: 0,
+									fontWeight: 'bold',
+									background:
+										'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+									backgroundClip: 'text',
+									WebkitBackgroundClip: 'text',
+									color: 'transparent',
+								}}
+							>
+								Регистрация компании
+							</Typography>
+						</Stack>
+						<Typography variant='body1' color='text.secondary'>
+							Создайте аккаунт для вашей рыболовной компании
 						</Typography>
-					</Stack>
-					<Typography variant='body1' color='text.secondary'>
-						Создайте аккаунт для вашей рыболовной компании
-					</Typography>
-				</Box>
-
-				{error && (
-					<Alert severity='error' sx={{ mb: 3 }}>
-						{error}
-					</Alert>
-				)}
-
-				<Box component='form' onSubmit={handleSubmit}>
-					<Stack spacing={3}>
-						{/* Название организации */}
-						<TextField
-							fullWidth
-							label='Название организации'
-							name='orgName'
-							value={formData.orgName}
-							onChange={handleInputChange}
-							required
-							placeholder='ООО Рыбмастер'
-							error={error.includes('Название организации')}
-						/>
-
-						{/* Тип организации */}
-						<TextField
-							select
-							fullWidth
-							label='Тип организации'
-							name='orgType'
-							value={formData.orgType}
-							onChange={handleInputChange}
-							required
-							error={error.includes('Тип организации')}
-						>
-							{organizationTypes.map(type => (
-								<MenuItem key={type.value} value={type.value}>
-									{type.label}
-								</MenuItem>
-							))}
-						</TextField>
-
-						{/* ИНН */}
-						<TextField
-							fullWidth
-							label='ИНН'
-							name='inn'
-							value={formData.inn}
-							onChange={handleInputChange}
-							required
-							placeholder='1234567890'
-							inputProps={{
-								maxLength: 12,
-								inputMode: 'numeric',
-								pattern: '[0-9]*',
-							}}
-							error={error.includes('ИНН')}
-							helperText='10 цифр для юрлица, 12 цифр для ИП'
-						/>
-
-						{/* Логин */}
-						<TextField
-							fullWidth
-							label='Логин'
-							name='username'
-							value={formData.username}
-							onChange={handleInputChange}
-							required
-							placeholder='fish_admin'
-							error={error.includes('Логин')}
-							helperText='Только латинские буквы, цифры и символ _'
-						/>
-
-						{/* Email */}
-						<TextField
-							fullWidth
-							label='Email'
-							name='email'
-							type='email'
-							value={formData.email}
-							onChange={handleInputChange}
-							required
-							placeholder='admin@fishmaster.ru'
-							error={error.includes('Email') || error.includes('email')}
-						/>
-
-						{/* Пароль */}
-						<TextField
-							fullWidth
-							label='Пароль'
-							name='password'
-							type={showPassword ? 'text' : 'password'}
-							value={formData.password}
-							onChange={handleInputChange}
-							required
-							placeholder='Secret123!'
-							error={error.includes('Пароль')}
-							helperText='Минимум 6 символов'
-							InputProps={{
-								endAdornment: (
-									<InputAdornment position='end'>
-										<IconButton
-											aria-label='toggle password visibility'
-											onClick={handleClickShowPassword}
-											edge='end'
-										>
-											{showPassword ? <VisibilityOff /> : <Visibility />}
-										</IconButton>
-									</InputAdornment>
-								),
-							}}
-						/>
-					</Stack>
-
-					<Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4 }}>
-						<Button
-							type='submit'
-							variant='contained'
-							disabled={isLoading}
-							size='large'
-						>
-							{isLoading ? (
-								<CircularProgress size={24} />
-							) : (
-								'Зарегистрировать компанию'
-							)}
+					</Box>
+					{error && (
+						<Alert severity='error' sx={{ mb: 3 }}>
+							{error}
+						</Alert>
+					)}
+					<Box component='form' onSubmit={handleSubmit}>
+						<Stack spacing={3}>
+							{/* Название организации */}
+							<TextField
+								fullWidth
+								label='Название организации'
+								name='orgName'
+								value={formData.orgName}
+								onChange={handleInputChange}
+								required
+								placeholder='ООО Рыбмастер'
+								error={error.includes('Название организации')}
+							/>
+							{/* Тип организации */}
+							<TextField
+								select
+								fullWidth
+								label='Тип организации'
+								name='orgType'
+								value={formData.orgType}
+								onChange={handleInputChange}
+								required
+								error={error.includes('Тип организации')}
+							>
+								{organizationTypes.map(type => (
+									<MenuItem key={type.value} value={type.value}>
+										{type.label}
+									</MenuItem>
+								))}
+							</TextField>
+							{/* ИНН */}
+							<TextField
+								fullWidth
+								label='ИНН'
+								name='inn'
+								value={formData.inn}
+								onChange={handleInputChange}
+								required
+								placeholder='1234567890'
+								inputProps={{
+									maxLength: 12,
+									inputMode: 'numeric',
+									pattern: '[0-9]*',
+								}}
+								error={error.includes('ИНН')}
+								helperText='10 цифр для юрлица, 12 цифр для ИП'
+							/>
+							{/* Логин */}
+							<TextField
+								fullWidth
+								label='Логин'
+								name='username'
+								value={formData.username}
+								onChange={handleInputChange}
+								required
+								placeholder='fish_admin'
+								error={error.includes('Логин')}
+								helperText='Только латинские буквы, цифры и символ _'
+							/>
+							{/* Email */}
+							<TextField
+								fullWidth
+								label='Email'
+								name='email'
+								type='email'
+								value={formData.email}
+								onChange={handleInputChange}
+								required
+								placeholder='admin@fishmaster.ru'
+								error={error.includes('Email') || error.includes('email')}
+							/>
+							{/* Пароль */}
+							<TextField
+								fullWidth
+								label='Пароль'
+								name='password'
+								type={showPassword ? 'text' : 'password'}
+								value={formData.password}
+								onChange={handleInputChange}
+								required
+								placeholder='Secret123!'
+								error={error.includes('Пароль')}
+								helperText='Минимум 6 символов'
+								InputProps={{
+									endAdornment: (
+										<InputAdornment position='end'>
+											<IconButton
+												aria-label='toggle password visibility'
+												onClick={handleClickShowPassword}
+												edge='end'
+											>
+												{showPassword ? <VisibilityOff /> : <Visibility />}
+											</IconButton>
+										</InputAdornment>
+									),
+								}}
+							/>
+						</Stack>
+						<Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4 }}>
+							<Button
+								type='submit'
+								variant='contained'
+								disabled={isLoading}
+								size='large'
+							>
+								{isLoading ? (
+									<CircularProgress size={24} />
+								) : (
+									'Зарегистрировать компанию'
+								)}
+							</Button>
+						</Box>
+					</Box>
+					<Divider sx={{ my: 4 }}>
+						<Typography variant='body2' color='text.secondary'>
+							Уже есть аккаунт?
+						</Typography>
+					</Divider>
+					<Box sx={{ textAlign: 'center' }}>
+						<Button component={Link} to='/login' variant='outlined' fullWidth>
+							Войти в существующий аккаунт
 						</Button>
 					</Box>
-				</Box>
-
-				<Divider sx={{ my: 4 }}>
-					<Typography variant='body2' color='text.secondary'>
-						Уже есть аккаунт?
-					</Typography>
-				</Divider>
-
-				<Box sx={{ textAlign: 'center' }}>
-					<Button component={Link} to='/login' variant='outlined' fullWidth>
-						Войти в существующий аккаунт
-					</Button>
-				</Box>
-
-				<Box sx={{ mt: 3, textAlign: 'center' }}>
-					<Typography variant='caption' color='text.secondary'>
-						После регистрации вы получите роль "Администратор компании".
-					</Typography>
-				</Box>
-			</Paper>
-		</Container>
+					{/* <Box sx={{ mt: 3, textAlign: 'center' }}>
+						<Typography variant='caption' color='text.secondary'>
+							После регистрации вы получите роль "Администратор компании".
+						</Typography>
+					</Box> */}
+				</Paper>
+			</Container>
+		</Fade>
 	)
 }
 

@@ -417,7 +417,7 @@ const AdminMessagesPage: React.FC = () => {
 								<Typography variant='h6' sx={{ fontWeight: 600, mb: 2 }}>
 									Сообщение:
 								</Typography>
-								<Paper variant='outlined' sx={{ p: 3, bgcolor: 'grey.50' }}>
+								<Paper variant='outlined' sx={{ p: 3 }}>
 									<Typography
 										variant='body1'
 										sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}

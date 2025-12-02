@@ -10,7 +10,15 @@ import {
 	IconButton,
 	Autocomplete,
 } from '@mui/material'
+import { DatePicker } from '@mui/x-date-pickers/DatePicker'
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import { ru } from 'date-fns/locale'
 import { Close, Save } from '@mui/icons-material'
+import useSWR, { useSWRConfig } from 'swr'
+import { api } from '../../api/api'
+import { useSnackbar } from 'notistack'
+import type { FishSpecies, FishingRegion, Company } from '../../interfaces'
 
 interface SetCompanyQuotaModalProps {
 	open: boolean
@@ -22,8 +30,16 @@ interface CompanyQuotaFormData {
 	company: string
 	species: string
 	region: string
-	year: number
+	startDate: Date | null
+	endDate: Date | null
 	limit: string
+}
+
+// Основной интерфейс для данных
+export interface CompanyData {
+	species: FishSpecies[]
+	regions: FishingRegion[]
+	organizations: Company[]
 }
 
 const SetCompanyQuotaModal: React.FC<SetCompanyQuotaModalProps> = ({
@@ -31,45 +47,23 @@ const SetCompanyQuotaModal: React.FC<SetCompanyQuotaModalProps> = ({
 	onClose,
 	title = 'Установить квоту компании',
 }) => {
+	const { enqueueSnackbar } = useSnackbar()
+	const { mutate } = useSWRConfig()
+
 	const [formData, setFormData] = useState<CompanyQuotaFormData>({
 		company: '',
 		species: '',
 		region: '',
-		year: new Date().getFullYear(),
+		startDate: new Date(),
+		endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
 		limit: '',
 	})
 
-	// Mock данные
-	const companies = [
-		{ id: '1', name: 'ООО "Рыбпром"', inn: '1234567890' },
-		{ id: '2', name: 'АО "Морские ресурсы"', inn: '0987654321' },
-		{ id: '3', name: 'ИП Сидоров А.В.', inn: '1122334455' },
-		{ id: '4', name: 'ООО "Черноморрыба"', inn: '5566778899' },
-		{ id: '5', name: 'АО "Северный рыбак"', inn: '6677889900' },
-	]
+	const [loading, setLoading] = useState(false)
 
-	const species = [
-		{ id: '1', name: 'Хамса' },
-		{ id: '2', name: 'Тюлька' },
-		{ id: '3', name: 'Кефаль' },
-		{ id: '4', name: 'Камбала-калкан' },
-		{ id: '5', name: 'Треска' },
-		{ id: '6', name: 'Сельдь' },
-	]
-
-	const regions = [
-		{ id: '1', name: 'Азовское море' },
-		{ id: '2', name: 'Чёрное море' },
-		{ id: '3', name: 'Баренцево море' },
-		{ id: '4', name: 'Балтийское море' },
-		{ id: '5', name: 'Охотское море' },
-	]
-
-	const years = [
-		new Date().getFullYear(),
-		new Date().getFullYear() + 1,
-		new Date().getFullYear() + 2,
-	]
+	const [companies, setCompanies] = useState<Company[]>([])
+	const [species, setSpecies] = useState<Company[]>([])
+	const [regions, setRegions] = useState<Company[]>([])
 
 	const handleInputChange =
 		(field: keyof CompanyQuotaFormData) =>
@@ -81,18 +75,69 @@ const SetCompanyQuotaModal: React.FC<SetCompanyQuotaModalProps> = ({
 		setFormData(prev => ({ ...prev, company: value?.id || '' }))
 	}
 
-	const handleSubmit = (event: React.FormEvent) => {
+	const handleStartDateChange = (date: Date | null) => {
+		setFormData(prev => ({
+			...prev,
+			startDate: date,
+			endDate:
+				prev.endDate && date && prev.endDate < date ? date : prev.endDate,
+		}))
+	}
+
+	const handleEndDateChange = (date: Date | null) => {
+		setFormData(prev => ({ ...prev, endDate: date }))
+	}
+
+	const handleSubmit = async (event: React.FormEvent) => {
 		event.preventDefault()
-		console.log('Установить квоту компании:', formData)
-		// Здесь будет API запрос
-		onClose()
-		setFormData({
-			company: '',
-			species: '',
-			region: '',
-			year: new Date().getFullYear(),
-			limit: '',
-		})
+		setLoading(true)
+
+		try {
+			const token = localStorage.getItem('token')
+
+			await api.post(
+				'/my/quotas/allocation',
+				{
+					organizationId: formData.company,
+					speciesId: formData.species,
+					regionId: formData.region,
+					periodStart: formData.startDate?.toISOString(),
+					periodEnd: formData.endDate?.toISOString(),
+					limitKg: Number(formData.limit),
+				},
+				{
+					headers: {
+						Authorization: token ? `Bearer ${token}` : '',
+					},
+				}
+			)
+
+			mutate('/allocation-quotas/table')
+
+			enqueueSnackbar('Квота компании успешно установлена', {
+				variant: 'success',
+			})
+
+			onClose()
+			setFormData({
+				company: '',
+				species: '',
+				region: '',
+				startDate: new Date(),
+				endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
+				limit: '',
+			})
+		} catch (error) {
+			console.log(error)
+			enqueueSnackbar(
+				'Ошибка при установке квоты ' + error.response.data.message,
+				{
+					variant: 'error',
+				}
+			)
+		} finally {
+			setLoading(false)
+		}
 	}
 
 	const handleClose = () => {
@@ -101,7 +146,8 @@ const SetCompanyQuotaModal: React.FC<SetCompanyQuotaModalProps> = ({
 			company: '',
 			species: '',
 			region: '',
-			year: new Date().getFullYear(),
+			startDate: new Date(),
+			endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
 			limit: '',
 		})
 	}
@@ -110,143 +156,207 @@ const SetCompanyQuotaModal: React.FC<SetCompanyQuotaModalProps> = ({
 		formData.company &&
 		formData.species &&
 		formData.region &&
+		formData.startDate &&
+		formData.endDate &&
+		formData.startDate <= formData.endDate &&
 		formData.limit &&
 		parseFloat(formData.limit) > 0
 
 	const selectedCompany = companies.find(c => c.id === formData.company)
 
+	const fetcher = async url => {
+		const token = localStorage.getItem('token')
+
+		await api
+			.get(url, {
+				headers: {
+					Authorization: token ? `Bearer ${token}` : '',
+				},
+			})
+			.then(res => {
+				const resData = res.data
+				setRegions(resData.regions)
+				setSpecies(resData.species)
+				setCompanies(resData.organizations)
+
+				return resData
+			})
+	}
+	const { data, isLoading, error } = useSWR('/allocation-quotas/meta', fetcher)
+
 	return (
-		<Modal open={open} onClose={handleClose}>
-			<Box
-				sx={{
-					position: 'absolute',
-					top: '50%',
-					left: '50%',
-					transform: 'translate(-50%, -50%)',
-					width: { xs: '90%', sm: 500 },
-					bgcolor: 'background.paper',
-					boxShadow: 24,
-					p: 4,
-					borderRadius: 2,
-				}}
-			>
-				{/* Заголовок */}
+		<LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
+			<Modal open={open} onClose={handleClose}>
 				<Box
 					sx={{
-						display: 'flex',
-						justifyContent: 'space-between',
-						alignItems: 'center',
-						mb: 3,
+						position: 'absolute',
+						top: '50%',
+						left: '50%',
+						transform: 'translate(-50%, -50%)',
+						width: { xs: '90%', sm: 600 },
+						bgcolor: 'background.paper',
+						boxShadow: 24,
+						p: 4,
+						borderRadius: 2,
 					}}
 				>
-					<Typography variant='h5' sx={{ fontWeight: 'bold' }}>
-						{title}
-					</Typography>
-					<IconButton onClick={handleClose} size='small'>
-						<Close />
-					</IconButton>
-				</Box>
+					{/* Заголовок */}
+					<Box
+						sx={{
+							display: 'flex',
+							justifyContent: 'space-between',
+							alignItems: 'center',
+							mb: 3,
+						}}
+					>
+						<Typography variant='h5' sx={{ fontWeight: 'bold' }}>
+							{title}
+						</Typography>
+						<IconButton onClick={handleClose} size='small'>
+							<Close />
+						</IconButton>
+					</Box>
 
-				{/* Форма */}
-				<Box component='form' onSubmit={handleSubmit}>
-					<Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-						<Autocomplete
-							options={companies}
-							getOptionLabel={option => `${option.name} (ИНН: ${option.inn})`}
-							value={selectedCompany || null}
-							onChange={handleCompanyChange}
-							renderInput={params => (
-								<TextField
-									{...params}
-									label='Компания'
-									required
-									placeholder='Выберите компанию'
-								/>
-							)}
-						/>
+					{/* Форма */}
+					<Box component='form' onSubmit={handleSubmit}>
+						<Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+							<Autocomplete
+								options={companies}
+								getOptionLabel={option => `${option.name} (ИНН: ${option.inn})`}
+								value={selectedCompany || null}
+								onChange={handleCompanyChange}
+								renderInput={params => (
+									<TextField
+										{...params}
+										label='Компания'
+										required
+										placeholder='Выберите компанию'
+									/>
+								)}
+							/>
 
-						<TextField
-							select
-							label='Вид рыбы'
-							value={formData.species}
-							onChange={handleInputChange('species')}
-							required
-							fullWidth
-						>
-							{species.map(sp => (
-								<MenuItem key={sp.id} value={sp.id}>
-									{sp.name}
-								</MenuItem>
-							))}
-						</TextField>
+							<TextField
+								select
+								label='Вид рыбы'
+								value={formData.species}
+								onChange={handleInputChange('species')}
+								required
+								fullWidth
+							>
+								{species.map(sp => (
+									<MenuItem key={sp.id} value={sp.id}>
+										{sp.commonName}
+									</MenuItem>
+								))}
+							</TextField>
 
-						<TextField
-							select
-							label='Район вылова'
-							value={formData.region}
-							onChange={handleInputChange('region')}
-							required
-							fullWidth
-						>
-							{regions.map(region => (
-								<MenuItem key={region.id} value={region.id}>
-									{region.name}
-								</MenuItem>
-							))}
-						</TextField>
+							<TextField
+								select
+								label='Район вылова'
+								value={formData.region}
+								onChange={handleInputChange('region')}
+								required
+								fullWidth
+							>
+								{regions.map(region => (
+									<MenuItem key={region.id} value={region.id}>
+										{region.name}
+									</MenuItem>
+								))}
+							</TextField>
 
-						<Box sx={{ display: 'flex', gap: 2 }}>
-							<Box sx={{ width: '50%' }}>
-								<TextField
-									select
-									label='Год'
-									value={formData.year}
-									onChange={handleInputChange('year')}
-									required
-									fullWidth
-								>
-									{years.map(year => (
-										<MenuItem key={year} value={year}>
-											{year}
-										</MenuItem>
-									))}
-								</TextField>
+							<Box sx={{ display: 'flex', gap: 2 }}>
+								<Box sx={{ width: '50%' }}>
+									<DatePicker
+										label='Дата начала'
+										value={formData.startDate}
+										onChange={handleStartDateChange}
+										slotProps={{
+											textField: {
+												fullWidth: true,
+												required: true,
+												error:
+													formData.startDate &&
+													formData.endDate &&
+													formData.startDate > formData.endDate,
+												helperText:
+													formData.startDate &&
+													formData.endDate &&
+													formData.startDate > formData.endDate
+														? 'Дата начала не может быть позже даты окончания'
+														: '',
+											},
+										}}
+									/>
+								</Box>
+
+								<Box sx={{ width: '50%' }}>
+									<DatePicker
+										label='Дата окончания'
+										value={formData.endDate}
+										onChange={handleEndDateChange}
+										minDate={formData.startDate}
+										slotProps={{
+											textField: {
+												fullWidth: true,
+												required: true,
+												error:
+													formData.startDate &&
+													formData.endDate &&
+													formData.startDate > formData.endDate,
+												helperText:
+													formData.startDate &&
+													formData.endDate &&
+													formData.startDate > formData.endDate
+														? 'Дата окончания не может быть раньше даты начала'
+														: '',
+											},
+										}}
+									/>
+								</Box>
 							</Box>
 
-							<Box sx={{ width: '50%' }}>
-								<TextField
-									label='Лимит (кг)'
-									type='number'
-									value={formData.limit}
-									onChange={handleInputChange('limit')}
-									required
-									fullWidth
-									inputProps={{ min: '1', step: '1' }}
-									helperText='Лимит для компании'
-								/>
-							</Box>
+							<TextField
+								label='Лимит (кг)'
+								type='number'
+								value={formData.limit}
+								onChange={handleInputChange('limit')}
+								required
+								fullWidth
+								inputProps={{ min: '1', step: '1' }}
+								helperText='Лимит для компании'
+							/>
+						</Box>
+
+						{/* Кнопки действий */}
+						<Box
+							sx={{
+								display: 'flex',
+								gap: 2,
+								justifyContent: 'flex-end',
+								mt: 4,
+							}}
+						>
+							<Button
+								variant='outlined'
+								onClick={handleClose}
+								disabled={loading}
+							>
+								Отмена
+							</Button>
+							<Button
+								type='submit'
+								variant='contained'
+								disabled={!isFormValid || loading}
+								startIcon={<Save />}
+							>
+								{loading ? 'Сохранение...' : 'Сохранить квоту'}
+							</Button>
 						</Box>
 					</Box>
-
-					{/* Кнопки действий */}
-					<Box
-						sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 4 }}
-					>
-						<Button variant='outlined' onClick={handleClose}>
-							Отмена
-						</Button>
-						<Button
-							type='submit'
-							variant='contained'
-							disabled={!isFormValid}
-							startIcon={<Save />}
-						>
-							Сохранить квоту
-						</Button>
-					</Box>
 				</Box>
-			</Box>
-		</Modal>
+			</Modal>
+		</LocalizationProvider>
 	)
 }
 

@@ -15,7 +15,7 @@ interface TableResponse {
 	data: any[]
 }
 
-const MyCatchesTable: React.FC = () => {
+const CompanyQuotasTable: React.FC = () => {
 	const fetcher = async (url: string): Promise<TableResponse> => {
 		const token = localStorage.getItem('token')
 		const response = await api.get(url, {
@@ -26,10 +26,7 @@ const MyCatchesTable: React.FC = () => {
 		return response.data
 	}
 
-	const { data, isLoading, error } = useSwr(
-		'/catch-reports/my/last3/table',
-		fetcher
-	)
+	const { data, isLoading, error } = useSwr('/allocation-quotas/table', fetcher)
 
 	return (
 		<LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -54,4 +51,4 @@ const MyCatchesTable: React.FC = () => {
 	)
 }
 
-export default MyCatchesTable
+export default CompanyQuotasTable

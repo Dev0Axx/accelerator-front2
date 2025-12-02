@@ -1,5 +1,8 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { CssBaseline } from '@mui/material'
+/* eslint-disable react-hooks/exhaustive-deps */
+// App.tsx
+import { useState, useEffect, useLayoutEffect } from 'react'
+import { Routes, Route } from 'react-router-dom'
+import { CssBaseline, CircularProgress, Box } from '@mui/material'
 import { ThemeProvider } from './contexts/ThemeContext'
 import MainLayout from './layouts/MainLayout'
 import HomePage from './pages/HomePage/HomePage'
@@ -12,52 +15,92 @@ import RegisterPage from './pages/RegisterPage/RegisterPage'
 import ContactPage from './pages/ContactPage/ContactPage'
 import AdminMessagesPage from './pages/AdminMessagesPage/AdminMessagesPage'
 import AccessDenied from './shared/components/AccessDenied'
-import { useLocalStorage } from './hooks/useLocalStorage'
+import { ProtectedRoute } from './components/ProtectedRoute'
+import { useAuthCheck } from './hooks/useAuthCheck'
+import WinterAnimation from './components/Winter/Winter'
+import NotFoundPage from './components/404'
+import { useAppSelector } from './hooks/storeHooks'
+import { useNavigate } from 'react-router-dom'
 
 function App() {
-	const token = useLocalStorage('token')
+	const navigate = useNavigate()
+	const { roles } = useAppSelector(state => state.userProfile)
+
+	// Проверка авторизации
+	useAuthCheck()
+
+	useLayoutEffect(() => {
+		// Перенаправление на основе ролей
+		if (roles?.includes('ADMIN')) {
+			navigate('/quotas')
+		} else if (roles?.includes('FISHERMAN')) {
+			navigate('/catch')
+		}
+	}, [roles])
 
 	return (
 		<ThemeProvider>
 			<CssBaseline />
-			<Router>
-				<MainLayout>
-					<Routes>
-						<Route path='/' element={<HomePage />} />
+			<WinterAnimation />
+			<MainLayout>
+				<Routes>
+					{/* Публичные маршруты (доступны всем) */}
+					<Route path='/' element={<HomePage />} />
+					<Route path='/login' element={<LoginPage />} />
+					<Route path='/register' element={<RegisterPage />} />
+					<Route path='/contact' element={<ContactPage />} />
+					<Route path='/access-denied' element={<AccessDenied />} />
 
-						<Route path='/login' element={!token && <LoginPage />} />
+					<Route path='*' element={<NotFoundPage />} />
 
-						<Route path='/register' element={!token && <RegisterPage />} />
+					{/* Маршруты для рыбаков */}
+					<Route
+						path='/catch'
+						element={
+							<ProtectedRoute requiredRoles={['FISHERMAN']} requireAuth={true}>
+								<CatchPage />
+							</ProtectedRoute>
+						}
+					/>
 
-						<Route path='/contact' element={<ContactPage />} />
+					<Route
+						path='/my-catches'
+						element={
+							<ProtectedRoute requiredRoles={['FISHERMAN']} requireAuth={true}>
+								<MyCatchesPage />
+							</ProtectedRoute>
+						}
+					/>
 
-						<Route
-							path='/catch'
-							element={token ? <CatchPage /> : <AccessDenied />}
-						/>
+					{/* Маршруты для рыбаков и админов */}
+					<Route
+						path='/overview'
+						element={
+							<ProtectedRoute requiredRoles={['ADMIN']} requireAuth={true}>
+								<OverviewPage />
+							</ProtectedRoute>
+						}
+					/>
 
-						<Route
-							path='/my-catches'
-							element={token ? <MyCatchesPage /> : <AccessDenied />}
-						/>
+					<Route
+						path='/quotas'
+						element={
+							<ProtectedRoute requiredRoles={['ADMIN']} requireAuth={true}>
+								<QuotasPage />
+							</ProtectedRoute>
+						}
+					/>
 
-						<Route
-							path='/overview'
-							element={token ? <OverviewPage /> : <AccessDenied />}
-						/>
-
-						<Route
-							path='/quotas'
-							element={token ? <QuotasPage /> : <AccessDenied />}
-						/>
-
-						<Route
-							path='/adminMessages'
-							element={token ? <AdminMessagesPage /> : <AccessDenied />}
-						/>
-					</Routes>
-				</MainLayout>
-			</Router>
+					<Route
+						path='/adminMessages'
+						element={
+							<ProtectedRoute requiredRoles={['ADMIN']} requireAuth={true}>
+								<AdminMessagesPage />
+							</ProtectedRoute>
+						}
+					/>
+				</Routes>
+			</MainLayout>
 		</ThemeProvider>
 	)
 }

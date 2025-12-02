@@ -1,9 +1,9 @@
 import React from 'react'
-import { Box, Typography, Button } from '@mui/material'
-import { useNavigate } from 'react-router-dom'
+import { Box, Typography, Paper } from '@mui/material'
+// import { useNavigate } from 'react-router-dom'
 
 const FeaturesSection: React.FC = () => {
-	const navigate = useNavigate()
+	// const navigate = useNavigate()
 
 	const features = [
 		{
@@ -69,7 +69,8 @@ const FeaturesSection: React.FC = () => {
 				}}
 			>
 				{features.slice(0, 2).map((feature, index) => (
-					<Box
+					<Paper
+						elevation={3}
 						key={index}
 						sx={{
 							flex: 1,
@@ -81,15 +82,15 @@ const FeaturesSection: React.FC = () => {
 							borderRadius: 2,
 							transition: 'all 0.3s ease-in-out',
 							'&:hover': {
-								bgcolor: 'action.hover',
+								// bgcolor: 'action.hover',
 								transform: 'translateY(-4px)',
 								boxShadow: 3,
 							},
-							cursor: 'pointer',
-							border: '1px solid',
-							borderColor: 'divider',
+							// cursor: 'pointer',
+							// border: '1px solid',
+							// borderColor: 'divider',
 						}}
-						onClick={() => navigate(feature.path)}
+						// onClick={() => navigate(feature.path)}
 					>
 						<Typography
 							variant='h3'
@@ -138,7 +139,7 @@ const FeaturesSection: React.FC = () => {
 								Подробнее →
 							</Button> */}
 						</Box>
-					</Box>
+					</Paper>
 				))}
 			</Box>
 
@@ -149,7 +150,8 @@ const FeaturesSection: React.FC = () => {
 					justifyContent: 'center',
 				}}
 			>
-				<Box
+				<Paper
+					elevation={3}
 					sx={{
 						maxWidth: '600px',
 						width: '100%',
@@ -161,15 +163,15 @@ const FeaturesSection: React.FC = () => {
 						borderRadius: 2,
 						transition: 'all 0.3s ease-in-out',
 						'&:hover': {
-							bgcolor: 'action.hover',
+							// bgcolor: 'action.hover',
 							transform: 'translateY(-4px)',
 							boxShadow: 3,
 						},
-						cursor: 'pointer',
+						// cursor: 'pointer',
 						border: '1px solid',
 						borderColor: 'divider',
 					}}
-					onClick={() => navigate(features[2].path)}
+					// onClick={() => navigate(features[2].path)}
 				>
 					<Typography
 						variant='h3'
@@ -203,7 +205,7 @@ const FeaturesSection: React.FC = () => {
 						>
 							{features[2].description}
 						</Typography>
-						<Button
+						{/* <Button
 							variant='text'
 							sx={{
 								color: 'primary.main',
@@ -216,9 +218,9 @@ const FeaturesSection: React.FC = () => {
 							}}
 						>
 							Подробнее →
-						</Button>
+						</Button> */}
 					</Box>
-				</Box>
+				</Paper>
 			</Box>
 		</Box>
 	)

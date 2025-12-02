@@ -73,10 +73,12 @@ const BenefitsSection: React.FC = () => {
 			>
 				{benefits.map((benefit, index) => (
 					<Card
+						elevation={3}
 						key={index}
 						sx={{
+							borderRadius: 2,
 							border: 'none',
-							boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+							// boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
 							transition: 'transform 0.2s ease-in-out',
 							'&:hover': {
 								transform: 'translateY(-4px)',
